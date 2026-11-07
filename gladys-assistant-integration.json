@@ -1,177 +1,1317 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "NHC Hurricanes",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Tropical storms and hurricanes of the US National Hurricane Center near your home.",
+    "fr": "Tempêtes tropicales et ouragans du National Hurricane Center américain près de chez vous.",
+    "de": "Tropische Stürme und Hurrikane des US National Hurricane Center nahe deinem Zuhause.",
+    "es": "Tormentas tropicales y huracanes del National Hurricane Center de EE. UU. cerca de su casa."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-nhc:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-nhc/main/cover.png",
+  "categories": ["environment", "security"],
+  "transports": ["cloud"],
+  "location": true,
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your home",
+        "fr": "Votre maison",
+        "de": "Dein Zuhause",
+        "es": "Su casa"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Tropical storms and hurricanes of the US National Hurricane Center: Atlantic, Eastern and Central Pacific. Distances are computed in Gladys from your house (or coordinates), never sent. Save, then create the devices in the Discover tab.",
+        "fr": "Tempêtes tropicales et ouragans du National Hurricane Center américain : Atlantique, Pacifique Est et Central. Les distances sont calculées dans Gladys depuis votre maison (ou des coordonnées), jamais envoyées. Enregistrez, puis créez les appareils dans l'onglet Découverte.",
+        "de": "Tropische Stürme und Hurrikane des US National Hurricane Center: Atlantik, Ost- und Zentralpazifik. Entfernungen werden in Gladys ab deinem Haus (oder Koordinaten) berechnet, nie gesendet. Speichere und lege dann die Geräte im Tab „Entdecken“ an.",
+        "es": "Tormentas tropicales y huracanes del National Hurricane Center de EE. UU.: Atlántico, Pacífico Este y Central. Las distancias se calculan en Gladys desde su casa (o coordenadas), nunca se envían. Guarde y cree los dispositivos en la pestaña Descubrir."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-nhc/blob/main/docs/en.md",
+          "label": {
+            "en": "Setup guide",
+            "fr": "Guide d'installation",
+            "de": "Installationsanleitung",
+            "es": "Guía de instalación"
+          }
+        }
+      ]
+    },
+    {
+      "key": "about",
+      "type": "section",
+      "label": {
+        "en": "Sources and limits",
+        "fr": "Sources et limites",
+        "de": "Quellen und Grenzen",
+        "es": "Fuentes y límites"
+      },
+      "description": {
+        "en": "Data of NOAA's National Hurricane Center (public domain), read without an account. Not an official alert service: follow the instructions of your local authorities. Not affiliated with NOAA.",
+        "fr": "Données du National Hurricane Center de la NOAA (domaine public), lues sans compte. Pas un service d'alerte officiel : suivez les consignes des autorités locales. Non affiliée à la NOAA.",
+        "de": "Daten des National Hurricane Center der NOAA (gemeinfrei), ohne Konto gelesen. Kein offizieller Warndienst: Befolge die Anweisungen deiner örtlichen Behörden. Nicht mit der NOAA verbunden.",
+        "es": "Datos del National Hurricane Center de la NOAA (dominio público), leídos sin cuenta. No es un servicio de alerta oficial: siga las instrucciones de sus autoridades locales. Sin afiliación con la NOAA."
+      },
+      "links": [
+        {
+          "url": "https://www.nhc.noaa.gov",
+          "label": {
+            "en": "NHC website",
+            "fr": "Site du NHC",
+            "de": "Website des NHC",
+            "es": "Sitio web del NHC"
+          }
         }
       ]
     },
     {
       "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "type": "string",
+      "label": {
+        "en": "Home latitude",
+        "fr": "Latitude de la maison",
+        "de": "Breitengrad des Zuhauses",
+        "es": "Latitud de la casa"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "description": {
+        "en": "Leave both coordinates empty to use the location of your house in Gladys.",
+        "fr": "Laissez les deux coordonnées vides pour utiliser la position de votre maison dans Gladys.",
+        "de": "Lass beide Koordinaten leer, um den Standort deines Hauses in Gladys zu verwenden.",
+        "es": "Deje ambas coordenadas vacías para usar la ubicación de su casa en Gladys."
+      },
+      "placeholder": {
+        "en": "e.g. 25.7617",
+        "fr": "ex. 16,2411",
+        "de": "z. B. 25.7617",
+        "es": "p. ej. 18.4655"
+      },
+      "required": false,
+      "default": ""
     },
     {
       "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "type": "string",
+      "label": {
+        "en": "Home longitude",
+        "fr": "Longitude de la maison",
+        "de": "Längengrad des Zuhauses",
+        "es": "Longitud de la casa"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "description": {
+        "en": "Decimal degrees, east positive (west is negative).",
+        "fr": "Degrés décimaux, positifs à l'est (l'ouest est négatif).",
+        "de": "Dezimalgrad, Osten positiv (Westen negativ).",
+        "es": "Grados decimales, positivos al este (el oeste es negativo)."
+      },
+      "placeholder": {
+        "en": "e.g. -80.1918",
+        "fr": "ex. -61,5331",
+        "de": "z. B. -80.1918",
+        "es": "p. ej. -66.1057"
+      },
+      "required": false,
+      "default": ""
     },
     {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "key": "basins",
+      "type": "multi_select",
+      "label": {
+        "en": "Basins",
+        "fr": "Bassins",
+        "de": "Becken",
+        "es": "Cuencas"
+      },
+      "description": {
+        "en": "One device per followed basin. The nearest storm is looked for in these basins only.",
+        "fr": "Un appareil par bassin suivi. La tempête la plus proche n'est cherchée que dans ces bassins.",
+        "de": "Ein Gerät pro verfolgtem Becken. Der nächste Sturm wird nur in diesen Becken gesucht.",
+        "es": "Un dispositivo por cuenca seguida. La tormenta más cercana solo se busca en estas cuencas."
+      },
       "required": false,
-      "default": "celsius",
+      "default": ["atlantic", "eastern_pacific", "central_pacific"],
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "atlantic",
+          "label": {
+            "en": "Atlantic",
+            "fr": "Atlantique",
+            "de": "Atlantik",
+            "es": "Atlántico"
+          }
+        },
+        {
+          "value": "eastern_pacific",
+          "label": {
+            "en": "Eastern Pacific",
+            "fr": "Pacifique Est",
+            "de": "Ostpazifik",
+            "es": "Pacífico Este"
+          }
+        },
+        {
+          "value": "central_pacific",
+          "label": {
+            "en": "Central Pacific",
+            "fr": "Pacifique Central",
+            "de": "Zentralpazifik",
+            "es": "Pacífico Central"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "units",
+      "type": "select",
+      "label": {
+        "en": "Units",
+        "fr": "Unités",
+        "de": "Einheiten",
+        "es": "Unidades"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Wind and distances of the devices and the scenes. Changing it asks to update the devices in the Discover tab.",
+        "fr": "Vent et distances des appareils et des scènes. Changer d'unité demande de mettre à jour les appareils dans l'onglet Découverte.",
+        "de": "Wind und Entfernungen der Geräte und Szenen. Eine Änderung verlangt, die Geräte im Tab „Entdecken“ zu aktualisieren.",
+        "es": "Viento y distancias de los dispositivos y escenas. Cambiarlo pide actualizar los dispositivos en la pestaña Descubrir."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
-    }
-  ],
-  "actions": [
-    {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
+      "default": "imperial",
+      "options": [
+        {
+          "value": "imperial",
+          "label": {
+            "en": "Imperial (mph, miles)",
+            "fr": "Impériales (mph, miles)",
+            "de": "Imperial (mph, Meilen)",
+            "es": "Imperiales (mph, millas)"
+          }
+        },
+        {
+          "value": "metric",
+          "label": {
+            "en": "Metric (km/h, km)",
+            "fr": "Métriques (km/h, km)",
+            "de": "Metrisch (km/h, km)",
+            "es": "Métricas (km/h, km)"
+          }
+        }
+      ]
     },
     {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
+      "key": "radius",
+      "type": "select",
+      "label": {
+        "en": "Radius",
+        "fr": "Rayon",
+        "de": "Radius",
+        "es": "Radio"
+      },
+      "description": {
+        "en": "In miles or kilometres, the unit above. Used by the trigger “storm within the radius”.",
+        "fr": "En miles ou en kilomètres, selon l'unité ci-dessus. Utilisé par le déclencheur « tempête dans le rayon ».",
+        "de": "In Meilen oder Kilometern, je nach Einheit oben. Für den Auslöser „Sturm im Radius“.",
+        "es": "En millas o kilómetros, según la unidad de arriba. Lo usa el desencadenante «tormenta dentro del radio»."
+      },
+      "required": false,
+      "default": "300",
+      "options": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "value": "100",
+          "label": {
+            "en": "100",
+            "fr": "100",
+            "de": "100",
+            "es": "100"
+          }
+        },
+        {
+          "value": "200",
+          "label": {
+            "en": "200",
+            "fr": "200",
+            "de": "200",
+            "es": "200"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "300",
+            "fr": "300",
+            "de": "300",
+            "es": "300"
+          }
+        },
+        {
+          "value": "500",
+          "label": {
+            "en": "500",
+            "fr": "500",
+            "de": "500",
+            "es": "500"
+          }
+        },
+        {
+          "value": "1000",
+          "label": {
+            "en": "1000",
+            "fr": "1000",
+            "de": "1000",
+            "es": "1000"
+          }
+        }
+      ]
+    },
+    {
+      "key": "trigger_scope",
+      "type": "select",
+      "label": {
+        "en": "Triggers about",
+        "fr": "Déclencheurs pour",
+        "de": "Auslöser für",
+        "es": "Desencadenantes para"
+      },
+      "description": {
+        "en": "Storms the triggers new named storm, category raised and coastal watch speak about.",
+        "fr": "Tempêtes concernées par les déclencheurs nouvelle tempête nommée, catégorie relevée et veille côtière.",
+        "de": "Stürme, für die die Auslöser neuer benannter Sturm, Kategorie erhöht und Küstenwarnung gelten.",
+        "es": "Tormentas a las que se refieren los desencadenantes nueva tormenta, categoría elevada y vigilancia costera."
+      },
+      "required": false,
+      "default": "basins",
+      "options": [
+        {
+          "value": "basins",
+          "label": {
+            "en": "Every storm of the followed basins",
+            "fr": "Toutes les tempêtes des bassins suivis",
+            "de": "Alle Stürme der verfolgten Becken",
+            "es": "Todas las tormentas de las cuencas seguidas"
+          }
+        },
+        {
+          "value": "radius",
+          "label": {
+            "en": "Only storms within the radius",
+            "fr": "Seulement les tempêtes dans le rayon",
+            "de": "Nur Stürme im Radius",
+            "es": "Solo las tormentas dentro del radio"
+          }
+        }
+      ]
+    },
+    {
+      "key": "refresh_interval",
+      "type": "select",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Fréquence de mise à jour",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "The NHC issues an advisory every 6 hours (3 hours near the coast) and its outlook 4 times a day.",
+        "fr": "Le NHC publie un bulletin toutes les 6 heures (3 heures près des côtes) et sa prévision 4 fois par jour.",
+        "de": "Das NHC veröffentlicht alle 6 Stunden eine Meldung (3 Stunden nahe der Küste) und seine Prognose 4-mal am Tag.",
+        "es": "El NHC publica un aviso cada 6 horas (3 horas cerca de la costa) y su previsión 4 veces al día."
+      },
+      "required": false,
+      "default": "15",
+      "options": [
+        {
+          "value": "10",
+          "label": {
+            "en": "10 minutes",
+            "fr": "10 minutes",
+            "de": "10 Minuten",
+            "es": "10 minutos"
+          }
+        },
+        {
+          "value": "15",
+          "label": {
+            "en": "15 minutes",
+            "fr": "15 minutes",
+            "de": "15 Minuten",
+            "es": "15 minutos"
+          }
+        },
+        {
+          "value": "30",
+          "label": {
+            "en": "30 minutes",
+            "fr": "30 minutes",
+            "de": "30 Minuten",
+            "es": "30 minutos"
+          }
+        },
+        {
+          "value": "60",
+          "label": {
+            "en": "60 minutes",
+            "fr": "60 minutes",
+            "de": "60 Minuten",
+            "es": "60 minutos"
+          }
+        }
+      ]
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the texts",
+        "fr": "Langue des textes",
+        "de": "Sprache der Texte",
+        "es": "Idioma de los textos"
+      },
+      "description": {
+        "en": "Names of the devices and features (at their creation) and texts sent to the scenes.",
+        "fr": "Noms des appareils et fonctionnalités (à leur création) et textes envoyés aux scènes.",
+        "de": "Namen der Geräte und Funktionen (bei ihrer Erstellung) und Texte für die Szenen.",
+        "es": "Nombres de los dispositivos y funciones (al crearlos) y textos enviados a las escenas."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
         }
       ]
     }
   ],
+  "actions": [
+    {
+      "key": "check_now",
+      "label": {
+        "en": "Show the current storms",
+        "fr": "Afficher les tempêtes en cours",
+        "de": "Aktuelle Stürme anzeigen",
+        "es": "Mostrar las tormentas actuales"
+      },
+      "timeout_seconds": 60
+    }
+  ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "new_storm",
+      "label": {
+        "en": "NHC: new named storm",
+        "fr": "NHC : nouvelle tempête nommée",
+        "de": "NHC: neuer benannter Sturm",
+        "es": "NHC: nueva tormenta con nombre"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A system of a followed basin becomes a tropical storm or a hurricane and gets a name.",
+        "fr": "Un système d'un bassin suivi devient tempête tropicale ou ouragan et reçoit un nom.",
+        "de": "Ein System eines verfolgten Beckens wird zum tropischen Sturm oder Hurrikan und bekommt einen Namen.",
+        "es": "Un sistema de una cuenca seguida se convierte en tormenta tropical o huracán y recibe un nombre."
       },
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
+          "key": "basin",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": {
+            "en": "Basins",
+            "fr": "Bassins",
+            "de": "Becken",
+            "es": "Cuencas"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "atlantic",
+              "label": {
+                "en": "Atlantic",
+                "fr": "Atlantique",
+                "de": "Atlantik",
+                "es": "Atlántico"
+              }
+            },
+            {
+              "value": "eastern_pacific",
+              "label": {
+                "en": "Eastern Pacific",
+                "fr": "Pacifique Est",
+                "de": "Ostpazifik",
+                "es": "Pacífico Este"
+              }
+            },
+            {
+              "value": "central_pacific",
+              "label": {
+                "en": "Central Pacific",
+                "fr": "Pacifique Central",
+                "de": "Zentralpazifik",
+                "es": "Pacífico Central"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "storm_id",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Storm id (al132025…)",
+            "fr": "Identifiant de la tempête (al132025…)",
+            "de": "Sturm-ID (al132025…)",
+            "es": "Identificador de la tormenta (al132025…)"
+          }
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "label": {
+            "en": "Storm name",
+            "fr": "Nom de la tempête",
+            "de": "Name des Sturms",
+            "es": "Nombre de la tormenta"
+          }
+        },
+        {
+          "key": "classification",
+          "type": "string",
+          "label": {
+            "en": "Classification (TS, HU…)",
+            "fr": "Classification (TS, HU…)",
+            "de": "Einstufung (TS, HU…)",
+            "es": "Clasificación (TS, HU…)"
+          }
+        },
+        {
+          "key": "classification_name",
+          "type": "string",
+          "label": {
+            "en": "Classification, in words",
+            "fr": "Classification, en toutes lettres",
+            "de": "Einstufung, ausgeschrieben",
+            "es": "Clasificación, en palabras"
+          }
+        },
+        {
+          "key": "basin_name",
+          "type": "string",
+          "label": {
+            "en": "Basin, in words",
+            "fr": "Bassin, en toutes lettres",
+            "de": "Becken, ausgeschrieben",
+            "es": "Cuenca, en palabras"
+          }
+        },
+        {
+          "key": "category",
+          "type": "number",
+          "label": {
+            "en": "Saffir-Simpson category (0-5)",
+            "fr": "Catégorie Saffir-Simpson (0-5)",
+            "de": "Saffir-Simpson-Kategorie (0-5)",
+            "es": "Categoría Saffir-Simpson (0-5)"
+          }
+        },
+        {
+          "key": "wind",
+          "type": "number",
+          "label": {
+            "en": "Sustained wind (mph or km/h)",
+            "fr": "Vent soutenu (mph ou km/h)",
+            "de": "Dauerwind (mph oder km/h)",
+            "es": "Viento sostenido (mph o km/h)"
+          }
+        },
+        {
+          "key": "distance",
+          "type": "number",
+          "label": {
+            "en": "Distance from home (mi or km)",
+            "fr": "Distance de la maison (mi ou km)",
+            "de": "Entfernung von zu Hause (mi oder km)",
+            "es": "Distancia de su casa (mi o km)"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          }
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "NHC advisory",
+            "fr": "Bulletin du NHC",
+            "de": "NHC-Meldung",
+            "es": "Aviso del NHC"
+          }
+        }
+      ]
+    },
+    {
+      "key": "storm_nearby",
+      "label": {
+        "en": "NHC: storm within the radius",
+        "fr": "NHC : tempête dans le rayon",
+        "de": "NHC: Sturm im Radius",
+        "es": "NHC: tormenta dentro del radio"
+      },
+      "description": {
+        "en": "The centre of a storm comes within the radius set around your home.",
+        "fr": "Le centre d'une tempête entre dans le rayon réglé autour de votre maison.",
+        "de": "Das Zentrum eines Sturms kommt in den Radius um dein Zuhause.",
+        "es": "El centro de una tormenta entra en el radio fijado alrededor de su casa."
+      },
+      "fields": [
+        {
+          "key": "basin",
+          "type": "multi_select",
+          "label": {
+            "en": "Basins",
+            "fr": "Bassins",
+            "de": "Becken",
+            "es": "Cuencas"
+          },
+          "options": [
+            {
+              "value": "atlantic",
+              "label": {
+                "en": "Atlantic",
+                "fr": "Atlantique",
+                "de": "Atlantik",
+                "es": "Atlántico"
+              }
+            },
+            {
+              "value": "eastern_pacific",
+              "label": {
+                "en": "Eastern Pacific",
+                "fr": "Pacifique Est",
+                "de": "Ostpazifik",
+                "es": "Pacífico Este"
+              }
+            },
+            {
+              "value": "central_pacific",
+              "label": {
+                "en": "Central Pacific",
+                "fr": "Pacifique Central",
+                "de": "Zentralpazifik",
+                "es": "Pacífico Central"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "storm_id",
+          "type": "string",
+          "label": {
+            "en": "Storm id (al132025…)",
+            "fr": "Identifiant de la tempête (al132025…)",
+            "de": "Sturm-ID (al132025…)",
+            "es": "Identificador de la tormenta (al132025…)"
+          }
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "label": {
+            "en": "Storm name",
+            "fr": "Nom de la tempête",
+            "de": "Name des Sturms",
+            "es": "Nombre de la tormenta"
+          }
+        },
+        {
+          "key": "classification",
+          "type": "string",
+          "label": {
+            "en": "Classification (TS, HU…)",
+            "fr": "Classification (TS, HU…)",
+            "de": "Einstufung (TS, HU…)",
+            "es": "Clasificación (TS, HU…)"
+          }
+        },
+        {
+          "key": "classification_name",
+          "type": "string",
+          "label": {
+            "en": "Classification, in words",
+            "fr": "Classification, en toutes lettres",
+            "de": "Einstufung, ausgeschrieben",
+            "es": "Clasificación, en palabras"
+          }
+        },
+        {
+          "key": "basin_name",
+          "type": "string",
+          "label": {
+            "en": "Basin, in words",
+            "fr": "Bassin, en toutes lettres",
+            "de": "Becken, ausgeschrieben",
+            "es": "Cuenca, en palabras"
+          }
+        },
+        {
+          "key": "category",
+          "type": "number",
+          "label": {
+            "en": "Saffir-Simpson category (0-5)",
+            "fr": "Catégorie Saffir-Simpson (0-5)",
+            "de": "Saffir-Simpson-Kategorie (0-5)",
+            "es": "Categoría Saffir-Simpson (0-5)"
+          }
+        },
+        {
+          "key": "wind",
+          "type": "number",
+          "label": {
+            "en": "Sustained wind (mph or km/h)",
+            "fr": "Vent soutenu (mph ou km/h)",
+            "de": "Dauerwind (mph oder km/h)",
+            "es": "Viento sostenido (mph o km/h)"
+          }
+        },
+        {
+          "key": "distance",
+          "type": "number",
+          "label": {
+            "en": "Distance from home (mi or km)",
+            "fr": "Distance de la maison (mi ou km)",
+            "de": "Entfernung von zu Hause (mi oder km)",
+            "es": "Distancia de su casa (mi o km)"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          }
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "NHC advisory",
+            "fr": "Bulletin du NHC",
+            "de": "NHC-Meldung",
+            "es": "Aviso del NHC"
+          }
+        }
+      ]
+    },
+    {
+      "key": "category_raised",
+      "label": {
+        "en": "NHC: category raised",
+        "fr": "NHC : catégorie relevée",
+        "de": "NHC: Kategorie erhöht",
+        "es": "NHC: categoría elevada"
+      },
+      "description": {
+        "en": "A storm becomes a hurricane, a major hurricane, or goes up a Saffir-Simpson category.",
+        "fr": "Une tempête devient ouragan, ouragan majeur, ou monte d'une catégorie Saffir-Simpson.",
+        "de": "Ein Sturm wird zum Hurrikan, zum schweren Hurrikan oder steigt eine Saffir-Simpson-Kategorie auf.",
+        "es": "Una tormenta se convierte en huracán, huracán mayor, o sube de categoría Saffir-Simpson."
+      },
+      "fields": [
+        {
+          "key": "basin",
+          "type": "multi_select",
+          "label": {
+            "en": "Basins",
+            "fr": "Bassins",
+            "de": "Becken",
+            "es": "Cuencas"
+          },
+          "options": [
+            {
+              "value": "atlantic",
+              "label": {
+                "en": "Atlantic",
+                "fr": "Atlantique",
+                "de": "Atlantik",
+                "es": "Atlántico"
+              }
+            },
+            {
+              "value": "eastern_pacific",
+              "label": {
+                "en": "Eastern Pacific",
+                "fr": "Pacifique Est",
+                "de": "Ostpazifik",
+                "es": "Pacífico Este"
+              }
+            },
+            {
+              "value": "central_pacific",
+              "label": {
+                "en": "Central Pacific",
+                "fr": "Pacifique Central",
+                "de": "Zentralpazifik",
+                "es": "Pacífico Central"
+              }
+            }
+          ]
+        },
+        {
+          "key": "milestone",
+          "type": "multi_select",
+          "label": {
+            "en": "Change",
+            "fr": "Changement",
+            "de": "Änderung",
+            "es": "Cambio"
+          },
+          "options": [
+            {
+              "value": "hurricane",
+              "label": {
+                "en": "Became a hurricane",
+                "fr": "Devenu ouragan",
+                "de": "Zum Hurrikan geworden",
+                "es": "Se convirtió en huracán"
+              }
+            },
+            {
+              "value": "major_hurricane",
+              "label": {
+                "en": "Became a major hurricane (cat. 3+)",
+                "fr": "Devenu ouragan majeur (cat. 3+)",
+                "de": "Zum schweren Hurrikan geworden (Kat. 3+)",
+                "es": "Se convirtió en huracán mayor (cat. 3+)"
+              }
+            },
+            {
+              "value": "stronger",
+              "label": {
+                "en": "Other category increase",
+                "fr": "Autre hausse de catégorie",
+                "de": "Andere Kategorieerhöhung",
+                "es": "Otro aumento de categoría"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "storm_id",
+          "type": "string",
+          "label": {
+            "en": "Storm id (al132025…)",
+            "fr": "Identifiant de la tempête (al132025…)",
+            "de": "Sturm-ID (al132025…)",
+            "es": "Identificador de la tormenta (al132025…)"
+          }
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "label": {
+            "en": "Storm name",
+            "fr": "Nom de la tempête",
+            "de": "Name des Sturms",
+            "es": "Nombre de la tormenta"
+          }
+        },
+        {
+          "key": "classification",
+          "type": "string",
+          "label": {
+            "en": "Classification (TS, HU…)",
+            "fr": "Classification (TS, HU…)",
+            "de": "Einstufung (TS, HU…)",
+            "es": "Clasificación (TS, HU…)"
+          }
+        },
+        {
+          "key": "classification_name",
+          "type": "string",
+          "label": {
+            "en": "Classification, in words",
+            "fr": "Classification, en toutes lettres",
+            "de": "Einstufung, ausgeschrieben",
+            "es": "Clasificación, en palabras"
+          }
+        },
+        {
+          "key": "basin_name",
+          "type": "string",
+          "label": {
+            "en": "Basin, in words",
+            "fr": "Bassin, en toutes lettres",
+            "de": "Becken, ausgeschrieben",
+            "es": "Cuenca, en palabras"
+          }
+        },
+        {
+          "key": "category",
+          "type": "number",
+          "label": {
+            "en": "Saffir-Simpson category (0-5)",
+            "fr": "Catégorie Saffir-Simpson (0-5)",
+            "de": "Saffir-Simpson-Kategorie (0-5)",
+            "es": "Categoría Saffir-Simpson (0-5)"
+          }
+        },
+        {
+          "key": "wind",
+          "type": "number",
+          "label": {
+            "en": "Sustained wind (mph or km/h)",
+            "fr": "Vent soutenu (mph ou km/h)",
+            "de": "Dauerwind (mph oder km/h)",
+            "es": "Viento sostenido (mph o km/h)"
+          }
+        },
+        {
+          "key": "distance",
+          "type": "number",
+          "label": {
+            "en": "Distance from home (mi or km)",
+            "fr": "Distance de la maison (mi ou km)",
+            "de": "Entfernung von zu Hause (mi oder km)",
+            "es": "Distancia de su casa (mi o km)"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          }
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "NHC advisory",
+            "fr": "Bulletin du NHC",
+            "de": "NHC-Meldung",
+            "es": "Aviso del NHC"
+          }
+        },
+        {
+          "key": "milestone",
+          "type": "string",
+          "label": {
+            "en": "Change (hurricane, major_hurricane, stronger)",
+            "fr": "Changement (hurricane, major_hurricane, stronger)",
+            "de": "Änderung (hurricane, major_hurricane, stronger)",
+            "es": "Cambio (hurricane, major_hurricane, stronger)"
+          }
+        },
+        {
+          "key": "previous_category",
+          "type": "number",
+          "label": {
+            "en": "Previous category",
+            "fr": "Catégorie précédente",
+            "de": "Vorherige Kategorie",
+            "es": "Categoría anterior"
+          }
+        }
+      ]
+    },
+    {
+      "key": "watch_warning",
+      "label": {
+        "en": "NHC: coastal watch or warning",
+        "fr": "NHC : veille ou alerte côtière",
+        "de": "NHC: Küstenwarnung",
+        "es": "NHC: vigilancia o aviso costero"
+      },
+      "description": {
+        "en": "The advisory of a storm puts a new kind of coastal watch or warning in effect (hurricane, storm surge, tropical storm).",
+        "fr": "Le bulletin d'une tempête met en vigueur un nouveau type de veille ou d'alerte côtière (ouragan, onde de tempête, tempête tropicale).",
+        "de": "Die Meldung eines Sturms setzt eine neue Art von Küstenvorwarnung oder -warnung in Kraft (Hurrikan, Sturmflut, Tropensturm).",
+        "es": "El aviso de una tormenta pone en vigor un nuevo tipo de vigilancia o aviso costero (huracán, marejada ciclónica, tormenta tropical)."
+      },
+      "fields": [
+        {
+          "key": "basin",
+          "type": "multi_select",
+          "label": {
+            "en": "Basins",
+            "fr": "Bassins",
+            "de": "Becken",
+            "es": "Cuencas"
+          },
+          "options": [
+            {
+              "value": "atlantic",
+              "label": {
+                "en": "Atlantic",
+                "fr": "Atlantique",
+                "de": "Atlantik",
+                "es": "Atlántico"
+              }
+            },
+            {
+              "value": "eastern_pacific",
+              "label": {
+                "en": "Eastern Pacific",
+                "fr": "Pacifique Est",
+                "de": "Ostpazifik",
+                "es": "Pacífico Este"
+              }
+            },
+            {
+              "value": "central_pacific",
+              "label": {
+                "en": "Central Pacific",
+                "fr": "Pacifique Central",
+                "de": "Zentralpazifik",
+                "es": "Pacífico Central"
+              }
+            }
+          ]
+        },
+        {
+          "key": "kind",
+          "type": "multi_select",
+          "label": {
+            "en": "Watch or warning",
+            "fr": "Veille ou alerte",
+            "de": "Vorwarnung oder Warnung",
+            "es": "Vigilancia o aviso"
+          },
+          "options": [
+            {
+              "value": "hurricane_warning",
+              "label": {
+                "en": "Hurricane warning",
+                "fr": "Alerte ouragan",
+                "de": "Hurrikanwarnung",
+                "es": "Aviso de huracán"
+              }
+            },
+            {
+              "value": "storm_surge_warning",
+              "label": {
+                "en": "Storm surge warning",
+                "fr": "Alerte onde de tempête",
+                "de": "Sturmflutwarnung",
+                "es": "Aviso de marejada ciclónica"
+              }
+            },
+            {
+              "value": "hurricane_watch",
+              "label": {
+                "en": "Hurricane watch",
+                "fr": "Veille ouragan",
+                "de": "Hurrikanvorwarnung",
+                "es": "Vigilancia de huracán"
+              }
+            },
+            {
+              "value": "storm_surge_watch",
+              "label": {
+                "en": "Storm surge watch",
+                "fr": "Veille onde de tempête",
+                "de": "Sturmflutvorwarnung",
+                "es": "Vigilancia de marejada ciclónica"
+              }
+            },
+            {
+              "value": "tropical_storm_warning",
+              "label": {
+                "en": "Tropical storm warning",
+                "fr": "Alerte tempête tropicale",
+                "de": "Tropensturmwarnung",
+                "es": "Aviso de tormenta tropical"
+              }
+            },
+            {
+              "value": "tropical_storm_watch",
+              "label": {
+                "en": "Tropical storm watch",
+                "fr": "Veille tempête tropicale",
+                "de": "Tropensturmvorwarnung",
+                "es": "Vigilancia de tormenta tropical"
+              }
+            }
+          ]
+        }
+      ],
+      "variables": [
+        {
+          "key": "storm_id",
+          "type": "string",
+          "label": {
+            "en": "Storm id (al132025…)",
+            "fr": "Identifiant de la tempête (al132025…)",
+            "de": "Sturm-ID (al132025…)",
+            "es": "Identificador de la tormenta (al132025…)"
+          }
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "label": {
+            "en": "Storm name",
+            "fr": "Nom de la tempête",
+            "de": "Name des Sturms",
+            "es": "Nombre de la tormenta"
+          }
+        },
+        {
+          "key": "classification",
+          "type": "string",
+          "label": {
+            "en": "Classification (TS, HU…)",
+            "fr": "Classification (TS, HU…)",
+            "de": "Einstufung (TS, HU…)",
+            "es": "Clasificación (TS, HU…)"
+          }
+        },
+        {
+          "key": "classification_name",
+          "type": "string",
+          "label": {
+            "en": "Classification, in words",
+            "fr": "Classification, en toutes lettres",
+            "de": "Einstufung, ausgeschrieben",
+            "es": "Clasificación, en palabras"
+          }
+        },
+        {
+          "key": "basin_name",
+          "type": "string",
+          "label": {
+            "en": "Basin, in words",
+            "fr": "Bassin, en toutes lettres",
+            "de": "Becken, ausgeschrieben",
+            "es": "Cuenca, en palabras"
+          }
+        },
+        {
+          "key": "category",
+          "type": "number",
+          "label": {
+            "en": "Saffir-Simpson category (0-5)",
+            "fr": "Catégorie Saffir-Simpson (0-5)",
+            "de": "Saffir-Simpson-Kategorie (0-5)",
+            "es": "Categoría Saffir-Simpson (0-5)"
+          }
+        },
+        {
+          "key": "wind",
+          "type": "number",
+          "label": {
+            "en": "Sustained wind (mph or km/h)",
+            "fr": "Vent soutenu (mph ou km/h)",
+            "de": "Dauerwind (mph oder km/h)",
+            "es": "Viento sostenido (mph o km/h)"
+          }
+        },
+        {
+          "key": "distance",
+          "type": "number",
+          "label": {
+            "en": "Distance from home (mi or km)",
+            "fr": "Distance de la maison (mi ou km)",
+            "de": "Entfernung von zu Hause (mi oder km)",
+            "es": "Distancia de su casa (mi o km)"
+          }
+        },
+        {
+          "key": "summary",
+          "type": "string",
+          "label": {
+            "en": "Summary",
+            "fr": "Résumé",
+            "de": "Zusammenfassung",
+            "es": "Resumen"
+          }
+        },
+        {
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "NHC advisory",
+            "fr": "Bulletin du NHC",
+            "de": "NHC-Meldung",
+            "es": "Aviso del NHC"
+          }
+        },
+        {
+          "key": "kind",
+          "type": "string",
+          "label": {
+            "en": "Kind (hurricane_warning…)",
+            "fr": "Type (hurricane_warning…)",
+            "de": "Art (hurricane_warning…)",
+            "es": "Tipo (hurricane_warning…)"
+          }
+        },
+        {
+          "key": "kind_name",
+          "type": "string",
+          "label": {
+            "en": "Watch or warning, in words",
+            "fr": "Veille ou alerte, en toutes lettres",
+            "de": "Vorwarnung oder Warnung, ausgeschrieben",
+            "es": "Vigilancia o aviso, en palabras"
+          }
+        },
+        {
+          "key": "areas",
+          "type": "string",
+          "label": {
+            "en": "Areas (in English, from the NHC)",
+            "fr": "Zones (en anglais, du NHC)",
+            "de": "Gebiete (auf Englisch, vom NHC)",
+            "es": "Zonas (en inglés, del NHC)"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "read_storms",
+      "label": {
+        "en": "NHC: read the current storms",
+        "fr": "NHC : lire les tempêtes en cours",
+        "de": "NHC: aktuelle Stürme lesen",
+        "es": "NHC: leer las tormentas actuales"
       },
-      "timeout_seconds": 15,
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ],
+      "description": {
+        "en": "The active storms of the followed basins as one sentence, to send by message or read aloud.",
+        "fr": "Les tempêtes actives des bassins suivis en une phrase, à envoyer par message ou à lire à voix haute.",
+        "de": "Die aktiven Stürme der verfolgten Becken als ein Satz, zum Senden per Nachricht oder zum Vorlesen.",
+        "es": "Las tormentas activas de las cuencas seguidas en una frase, para enviar por mensaje o leer en voz alta."
+      },
+      "timeout_seconds": 60,
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "text",
+          "type": "string",
+          "label": {
+            "en": "Storms, in one sentence",
+            "fr": "Tempêtes, en une phrase",
+            "de": "Stürme, in einem Satz",
+            "es": "Tormentas, en una frase"
+          }
+        },
+        {
+          "key": "count",
+          "type": "number",
+          "label": {
+            "en": "Number of active systems",
+            "fr": "Nombre de systèmes actifs",
+            "de": "Anzahl aktiver Systeme",
+            "es": "Número de sistemas activos"
+          }
+        },
+        {
+          "key": "max_category",
+          "type": "number",
+          "label": {
+            "en": "Highest category (0-5)",
+            "fr": "Catégorie la plus haute (0-5)",
+            "de": "Höchste Kategorie (0-5)",
+            "es": "Categoría más alta (0-5)"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "storms",
+      "label": {
+        "en": "Hurricanes (NHC)",
+        "fr": "Ouragans (NHC)",
+        "de": "Hurrikane (NHC)",
+        "es": "Huracanes (NHC)"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Active storms of the followed basins, strongest first, and the formation outlook.",
+        "fr": "Tempêtes actives des bassins suivis, la plus forte en tête, et la prévision de formation.",
+        "de": "Aktive Stürme der verfolgten Becken, stärkster zuerst, und die Entstehungsprognose.",
+        "es": "Tormentas activas de las cuencas seguidas, la más fuerte primero, y la previsión de formación."
+      },
+      "icon": "wind",
+      "settings": [
+        {
+          "key": "show_outlook",
+          "type": "boolean",
+          "label": {
+            "en": "Show the formation outlook",
+            "fr": "Afficher la prévision de formation",
+            "de": "Entstehungsprognose anzeigen",
+            "es": "Mostrar la previsión de formación"
+          },
+          "required": false,
+          "default": true
+        },
+        {
+          "key": "show_link",
+          "type": "boolean",
+          "label": {
+            "en": "Show the link to the NHC",
+            "fr": "Afficher le lien vers le NHC",
+            "de": "Link zum NHC anzeigen",
+            "es": "Mostrar el enlace al NHC"
+          },
+          "required": false,
+          "default": true
+        }
+      ]
     }
   ]
 }

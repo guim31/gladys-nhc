@@ -1,61 +1,163 @@
-# Demo Devices Template
+# NHC Hurricanes
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+Follow the tropical storms and hurricanes of the
+[National Hurricane Center](https://www.nhc.noaa.gov) (NHC, NOAA, United States) from Gladys: the
+Atlantic basin (with the Caribbean Sea and the Gulf), the Eastern Pacific and the Central Pacific
+(Hawaii). For each storm: its classification, its Saffir-Simpson category, its sustained wind, its
+distance from your home, its movement and the coastal watches and warnings of its latest advisory. For
+each basin: the chance that a new storm forms within 48 hours and 7 days, from the Tropical Weather
+Outlook. No account, no API key.
+
+This is not an official alert service: in an emergency, follow the instructions of your local
+authorities and of your national weather service. Not affiliated with NOAA or the National Weather
+Service.
 
 ## What you get
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+- One **basin device** per followed basin: number of active systems, strongest system (in words), its
+  category and sustained wind, and the highest formation chance within 48 hours and 7 days.
+- A **Nearest hurricane** device: the storm nearest to your home, its category, sustained wind,
+  distance, direction (seen from your home) and movement, with the history of the category, wind and distance. Without any storm, the direction keeps its
+  last value.
+- A **dashboard widget** listing the active storms, strongest first, each with its advisory and
+  forecast cone, and the formation outlook of each basin.
+- Four **scene triggers**: a new named storm, a storm within the radius around your home, a category
+  raised (hurricane, major hurricane), and a new coastal watch or warning.
+- A **scene action** that reads the active storms as one sentence, to send by message or have it read
+  aloud.
+
+Compared with the GDACS integration, which rates the cyclones of the whole world green, orange or red
+by their humanitarian impact, this one gives the official American detail of the three NHC basins: the
+Saffir-Simpson category, the advisories, the watches and warnings, and the formation outlook.
+
+## Requirements
+
+- Gladys Assistant 5.1 or later.
+- Internet access from the Gladys host (the integration reads `www.nhc.noaa.gov`).
+- For distances and the nearest storm: a location for your house in Gladys (Settings → Houses), or
+  coordinates typed in the configuration.
 
 ## Configuration
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-   The **refresh interval** sets how often the weather station and the
-   plug's power are read: every 5 minutes by default, every minute at most.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+Install the integration from the store (or Integrations → Install from GitHub, with the address
+`https://github.com/guim31/gladys-nhc`), save the configuration, then create the devices in the
+**Discover** tab.
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+### Settings
 
-## Actions
+| Setting                   | Default                            | Meaning                                                                                       |
+| ------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------- |
+| Home latitude / longitude | empty                              | Leave both empty to use the location of your house in Gladys. Decimal degrees, west negative. |
+| Basins                    | all three                          | One device per followed basin; the nearest storm is looked for in these basins only.          |
+| Units                     | Imperial                           | Imperial (mph, miles) or metric (km/h, km), for the devices and the scenes.                   |
+| Radius                    | 300                                | In miles or kilometres, the unit above, for the trigger "storm within the radius".            |
+| Triggers about            | Every storm of the followed basins | Or only the storms within the radius.                                                         |
+| Refresh interval          | 15 minutes                         | 10, 15, 30 or 60 minutes.                                                                     |
+| Language of the texts     | French                             | Names of the devices and features (frozen at their creation) and texts sent to scenes.        |
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+### Units and names
 
-## Scenes
+Changing the units or the language changes the devices: Gladys then offers to **update** them in the
+Discover tab. Feature names stay the ones of their creation. Wind speeds are rounded to 5 mph or
+5 km/h, like the NHC advisories.
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+## Devices
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+**Basin device** (Hurricanes Atlantic, Eastern Pacific, Central Pacific):
 
-## Dashboard
+| Feature                 | Type                | Values                                              |
+| ----------------------- | ------------------- | --------------------------------------------------- |
+| Active systems          | counter             | storms the NHC follows in the basin                 |
+| Strongest system        | text                | "Hurricane Melissa", or "No active system"          |
+| Highest category        | counter 0-5         | Saffir-Simpson category, 0 below hurricane strength |
+| Highest sustained wind  | speed (mph or km/h) | 0 without storm                                     |
+| Formation chance 48 h   | percentage          | highest chance of the disturbances of the outlook   |
+| Formation chance 7 days | percentage          | same, within 7 days                                 |
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+Out of season, the NHC no longer issues its outlook: the formation chances are then not published
+(rather than a false 0 %).
+
+**Nearest hurricane**: storm (classification and name), category 0-5, sustained wind, distance (miles or
+km), direction (degrees, 0 north, 90 east, seen from your home) and movement ("W at 13 mph"). Without
+any storm, the storm reads "No active system" and the distance is half the circumference of the Earth
+(12,451 miles or 20,038 km), so that a "below 300 miles" condition stays false. Without a location for
+your home, this device is not updated.
+
+The devices are refreshed by the integration itself (not by the polling of Gladys).
+
+## Dashboard widget
+
+**Hurricanes (NHC)**: the number of active systems, then the storms of the followed basins, strongest
+first (8 at most): classification and name, wind and distance, and a badge with the category (red for
+a major hurricane, orange for a hurricane). Tap a storm to see its position, movement, pressure, the
+coastal watches and warnings in effect and the links to the public advisory and the forecast cone.
+Below, one row per basin with the formation chances within 48 hours and 7 days (setting **Show the
+formation outlook** to hide it), and a link to the NHC (setting **Show the link to the NHC**). The widget follows the units of the user who looks at it.
+
+## Scene triggers
+
+All of them can be filtered by **basin**. "Triggers about" chooses whether the new storm, category and
+watch triggers speak about every storm of the followed basins or only those within the radius. With the radius, a name,
+a category or a watch that comes before the storm enters the radius is not reported later: only
+**storm within the radius** fires on entry.
+
+- **NHC: new named storm**: a system becomes a tropical (or subtropical) storm or a hurricane and gets a
+  name.
+- **NHC: storm within the radius**: the centre of a storm comes within the radius. It fires again only
+  after the storm has left the radius by more than 10 %.
+- **NHC: category raised**: filter **Change**: became a hurricane, became a major hurricane (category 3
+  or more; it wins when both happen at once), or another category increase.
+- **NHC: coastal watch or warning**: the latest public advisory of a storm puts a new kind of watch or
+  warning in effect: hurricane, storm surge or tropical storm, watch or warning (filter **Watch or
+  warning**). The areas are those of the advisory, in English: check that yours is listed. For the
+  official alerts of your county, see the NWS alerts integration.
+
+Variables: storm id, name, classification (code and words), basin, category, sustained wind, distance
+from home, summary, link to the advisory; plus the change and the previous category, or the kind of
+watch and its areas.
+
+The storms present at the first start, or when the configuration is saved, fire nothing: they are not
+news. A restart fires nothing either.
+
+## Scene action
+
+**NHC: read the current storms** returns `text` (one sentence: "2 active systems: Hurricane Melissa,
+category 5, 165 mph, 145 mi SW of home; …", plus the highest formation chance within 7 days), `count`
+and `max_category`. Use them in a message or with text to speech.
+
+## Scene examples
+
+- When **NHC: storm within the radius** fires, send `summary` to the whole family.
+- When **NHC: coastal watch or warning** fires with **Hurricane warning**, send the `areas` by message.
+- Every morning in season, if the highest category of the nearest hurricane is above 0, read the storms
+  aloud.
+
+## Data sources, terms and quotas
+
+- `https://www.nhc.noaa.gov/CurrentStorms.json`: the active storms.
+- `https://www.nhc.noaa.gov/index-at.xml`, `index-ep.xml`, `index-cp.xml`: the feed of each basin, with
+  the Tropical Weather Outlook and the public advisories.
+
+The data of NOAA's National Hurricane Center are in the public domain. There is no published quota: the
+integration sends 1 request per cycle plus 1 per followed basin (4 every 15 minutes by default), with a
+User-Agent that names it. The location of your home is never sent: distances are computed in the
+integration.
 
 ## Troubleshooting
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- **"The National Hurricane Center does not answer"**: the NHC site is unreachable from the Gladys
+  host; the values are kept and the integration tries again at each cycle.
+- **No distance, no nearest storm**: give your house a location (Settings → Houses) or type coordinates.
+- **No formation chance**: outside the season (December to May) the NHC does not
+  issue its outlook.
+- **Units or names not updated**: update the devices in the Discover tab.
+- Logs: `docker logs` of the integration container; `LOG_LEVEL=debug` shows each cycle.
+
+## Limits
+
+- Three basins only: the NHC does not cover the western Pacific (typhoons), the Indian Ocean or the
+  southern hemisphere: see the GDACS integration.
+- Distances are measured to the centre of the storm, not to the edge of its winds.
+- The watches and warnings come from the text of the advisory, read as published; their areas are in
+  English.
+- The NHC updates its advisories every 6 hours (3 hours near the coast): the values are not real time.

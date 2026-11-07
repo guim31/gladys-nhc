@@ -1,67 +1,167 @@
-# Template de démonstration
+# NHC Hurricanes
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Suivez dans Gladys les tempêtes tropicales et les ouragans du
+[National Hurricane Center](https://www.nhc.noaa.gov) (NHC, NOAA, États-Unis) : bassin Atlantique (avec la
+mer des Caraïbes et le golfe), Pacifique Est et Pacifique Central (Hawaï). Pour chaque tempête : sa
+classification, sa catégorie Saffir-Simpson, son vent soutenu, sa distance de votre maison, son
+déplacement et les veilles et alertes côtières de son dernier bulletin. Pour chaque bassin : la
+probabilité qu'une nouvelle tempête se forme dans les 48 heures et les 7 jours, d'après le Tropical
+Weather Outlook. Sans compte ni clé d'API.
+
+Ce n'est pas un service d'alerte officiel : en cas de danger, suivez les consignes des autorités locales
+et de votre service météorologique national. Non affiliée à la NOAA ni au National Weather Service.
 
 ## Ce que vous obtenez
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+- Un **appareil par bassin** suivi : nombre de systèmes actifs, système le plus fort (en toutes
+  lettres), sa catégorie et son vent soutenu, et la plus forte probabilité de formation à 48 heures et
+  à 7 jours.
+- Un appareil **Ouragan le plus proche** : la tempête la plus proche de votre maison, sa catégorie, son
+  vent soutenu, sa distance, sa direction (vue depuis la maison) et son déplacement, avec l'historique de la catégorie, du vent et de la distance. Sans tempête, la
+  direction garde sa dernière valeur.
+- Un **widget** de tableau de bord listant les tempêtes actives, la plus forte en tête, chacune avec
+  son bulletin et son cône de prévision, et la prévision de formation de chaque bassin.
+- Quatre **déclencheurs de scène** : nouvelle tempête nommée, tempête dans le rayon autour de votre
+  maison, catégorie relevée (ouragan, ouragan majeur), et nouvelle veille ou alerte côtière.
+- Une **action de scène** qui lit les tempêtes actives en une phrase, à envoyer par message ou à faire
+  lire à voix haute.
+
+À côté de l'intégration GDACS, qui classe les cyclones du monde entier en vert, orange ou rouge selon
+leur impact humanitaire, celle-ci donne le détail officiel américain des trois bassins du NHC : la
+catégorie Saffir-Simpson, les bulletins, les veilles et alertes, et la prévision de formation.
+
+## Prérequis
+
+- Gladys Assistant 5.1 ou plus récent.
+- Un accès à Internet depuis la machine de Gladys (l'intégration lit `www.nhc.noaa.gov`).
+- Pour les distances et la tempête la plus proche : la position de votre maison dans Gladys
+  (Paramètres → Maisons), ou des coordonnées saisies dans la configuration.
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+Installez l'intégration depuis le store (ou Intégrations → Installer depuis GitHub, avec l'adresse
+`https://github.com/guim31/gladys-nhc`), enregistrez la configuration, puis créez les appareils dans
+l'onglet **Découverte**.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+### Réglages
 
-## Actions
+| Réglage                           | Par défaut                             | Signification                                                                                            |
+| --------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Latitude / longitude de la maison | vides                                  | Laissez-les vides pour utiliser la position de votre maison dans Gladys. Degrés décimaux, ouest négatif. |
+| Bassins                           | les trois                              | Un appareil par bassin suivi ; la tempête la plus proche n'est cherchée que là.                          |
+| Unités                            | Impériales                             | Impériales (mph, miles) ou métriques (km/h, km), pour les appareils et les scènes.                       |
+| Rayon                             | 300                                    | En miles ou en kilomètres, selon l'unité, pour le déclencheur « tempête dans le rayon ».                 |
+| Déclencheurs pour                 | Toutes les tempêtes des bassins suivis | Ou seulement les tempêtes dans le rayon.                                                                 |
+| Fréquence de mise à jour          | 15 minutes                             | 10, 15, 30 ou 60 minutes.                                                                                |
+| Langue des textes                 | Français                               | Noms des appareils et fonctionnalités (figés à leur création) et textes des scènes.                      |
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+### Unités et noms
 
-## Scènes
+Changer d'unités ou de langue modifie les appareils : Gladys propose alors de les **mettre à jour** dans
+l'onglet Découverte. Les noms des fonctionnalités restent ceux de leur création. Les vents sont arrondis
+à 5 mph ou 5 km/h, comme dans les bulletins du NHC.
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+## Appareils
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+**Appareil de bassin** (Ouragans Atlantique, Pacifique Est, Pacifique Central) :
 
-## Tableau de bord
+| Fonctionnalité                   | Type                  | Valeurs                                                  |
+| -------------------------------- | --------------------- | -------------------------------------------------------- |
+| Systèmes actifs                  | compteur              | tempêtes suivies par le NHC dans le bassin               |
+| Système le plus fort             | texte                 | « Ouragan Melissa », ou « Aucun système actif »          |
+| Catégorie la plus haute          | compteur 0-5          | catégorie Saffir-Simpson, 0 sous le seuil de l'ouragan   |
+| Vent soutenu le plus fort        | vitesse (mph ou km/h) | 0 sans tempête                                           |
+| Probabilité de formation 48 h    | pourcentage           | plus forte probabilité des perturbations de la prévision |
+| Probabilité de formation 7 jours | pourcentage           | idem, à 7 jours                                          |
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Hors saison, le NHC ne publie plus sa prévision : les probabilités de formation ne sont alors pas
+publiées (plutôt qu'un faux 0 %).
+
+**Ouragan le plus proche** : tempête (classification et nom), catégorie 0-5, vent soutenu, distance
+(miles ou km), direction (degrés, 0 au nord, 90 à l'est, vue depuis la maison) et déplacement (« Cap O à
+21 km/h »). Sans tempête, la tempête vaut « Aucun système actif » et la distance la moitié de la
+circonférence de la Terre (12 451 miles ou 20 038 km), pour qu'une condition « moins de 300 miles »
+reste fausse. Sans position de la maison, cet appareil n'est pas mis à jour.
+
+Les appareils sont rafraîchis par l'intégration elle-même (pas par l'interrogation de Gladys).
+
+## Widget du tableau de bord
+
+**Ouragans (NHC)** : le nombre de systèmes actifs, puis les tempêtes des bassins suivis, la plus forte
+en tête (8 au plus) : classification et nom, vent et distance, et une pastille avec la catégorie (rouge
+pour un ouragan majeur, orange pour un ouragan). Touchez une tempête pour voir sa position, son
+déplacement, sa pression, les veilles et alertes côtières en vigueur et les liens vers le bulletin public
+et le cône de prévision. En dessous, une ligne par bassin avec les probabilités de formation à 48 heures
+et à 7 jours (réglage **Afficher la prévision de formation** pour la masquer), et un lien vers le NHC (réglage
+**Afficher le lien vers le NHC**). Le widget suit les unités
+de l'utilisateur qui le regarde.
+
+## Déclencheurs de scène
+
+Tous se filtrent par **bassin**. « Déclencheurs pour » choisit si les déclencheurs nouvelle tempête,
+catégorie et veille concernent toutes les tempêtes des bassins suivis ou seulement celles du rayon. Avec le rayon, un nom,
+une catégorie ou une veille arrivés avant que la tempête n'entre dans le rayon ne sont pas signalés
+ensuite : seul **tempête dans le rayon** se déclenche à l'entrée.
+
+- **NHC : nouvelle tempête nommée** : un système devient tempête tropicale (ou subtropicale) ou ouragan
+  et reçoit un nom.
+- **NHC : tempête dans le rayon** : le centre d'une tempête entre dans le rayon. Il ne se redéclenche
+  qu'après que la tempête est sortie du rayon de plus de 10 %.
+- **NHC : catégorie relevée** : filtre **Changement** : devenu ouragan, devenu ouragan majeur (catégorie 3
+  ou plus ; il l'emporte quand les deux arrivent en même temps), ou autre hausse de catégorie.
+- **NHC : veille ou alerte côtière** : le dernier bulletin public d'une tempête met en vigueur un nouveau
+  type de veille ou d'alerte : ouragan, onde de tempête ou tempête tropicale, veille ou alerte (filtre
+  **Veille ou alerte**). Les zones sont celles du bulletin, en anglais : vérifiez que la vôtre y figure.
+  Pour les alertes officielles de votre comté, voyez l'intégration des alertes NWS.
+
+Variables : identifiant, nom, classification (code et en toutes lettres), bassin, catégorie, vent
+soutenu, distance de la maison, résumé, lien vers le bulletin ; plus le changement et la catégorie
+précédente, ou le type de veille et ses zones.
+
+Les tempêtes présentes au premier démarrage, ou à l'enregistrement de la configuration, ne déclenchent
+rien : ce ne sont pas des nouvelles. Un redémarrage non plus.
+
+## Action de scène
+
+**NHC : lire les tempêtes en cours** renvoie `text` (une phrase : « 2 systèmes actifs : Ouragan Melissa,
+catégorie 5, 270 km/h, à 230 km au SO de la maison ; … », plus la plus forte probabilité de formation à
+7 jours), `count` et `max_category`. À utiliser dans un message ou avec la synthèse vocale.
+
+## Exemples de scènes
+
+- Quand **NHC : tempête dans le rayon** se déclenche, envoyer `summary` à toute la famille.
+- Quand **NHC : veille ou alerte côtière** se déclenche avec **Alerte ouragan**, envoyer les `areas` par
+  message.
+- Chaque matin en saison, si la catégorie de l'ouragan le plus proche dépasse 0, lire les tempêtes à
+  voix haute.
+
+## Sources des données, conditions et quotas
+
+- `https://www.nhc.noaa.gov/CurrentStorms.json` : les tempêtes actives.
+- `https://www.nhc.noaa.gov/index-at.xml`, `index-ep.xml`, `index-cp.xml` : le flux de chaque bassin,
+  avec le Tropical Weather Outlook et les bulletins publics.
+
+Les données du National Hurricane Center de la NOAA sont dans le domaine public. Aucun quota n'est
+publié : l'intégration envoie 1 requête par cycle plus 1 par bassin suivi (4 toutes les 15 minutes par
+défaut), avec un User-Agent qui la nomme. La position de votre maison n'est jamais envoyée : les
+distances sont calculées dans l'intégration.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **« Le National Hurricane Center ne répond pas »** : le site du NHC est injoignable depuis la machine
+  de Gladys ; les valeurs sont gardées et l'intégration réessaie à chaque cycle.
+- **Pas de distance, pas de tempête la plus proche** : indiquez la position de votre maison (Paramètres →
+  Maisons) ou saisissez des coordonnées.
+- **Pas de probabilité de formation** : hors saison (de décembre à mai) le NHC ne publie pas sa
+  prévision.
+- **Unités ou noms pas à jour** : mettez à jour les appareils dans l'onglet Découverte.
+- Journaux : `docker logs` du conteneur de l'intégration ; `LOG_LEVEL=debug` montre chaque cycle.
+
+## Limites
+
+- Trois bassins seulement : le NHC ne couvre ni le Pacifique ouest (typhons), ni l'océan Indien, ni
+  l'hémisphère sud : voyez l'intégration GDACS.
+- Les distances sont mesurées au centre de la tempête, pas au bord de ses vents.
+- Les veilles et alertes viennent du texte du bulletin, lu tel que publié ; leurs zones sont en anglais.
+- Le NHC met à jour ses bulletins toutes les 6 heures (3 heures près des côtes) : les valeurs ne sont pas
+  en temps réel.

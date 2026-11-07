@@ -16,8 +16,8 @@ its only runtime dependency. It started from the official JavaScript template.
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/monitor.test.js          # one file
+node --test --test-name-pattern "radius"  # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
@@ -32,15 +32,20 @@ pushing.
 
 ```
 index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/app.js                        registers every SDK handler on a GladysIntegration (or the fake)
+src/monitor.js                    refresh cycle: NHC → followed storms → states, scene triggers
+src/nhc.js                        NHC client: CurrentStorms.json, basin RSS feeds (outlook, advisories)
+src/device.js                     basin devices + nearest storm: external ids, feature names, payloads
+src/actions.js                    scene action `read_storms`, configuration action `check_now`
+src/widgets.js                    dashboard widget `storms` (card-list + outlook status rows)
+src/messages.js                   texts of the container in en/fr/de/es, number and date formats
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+src/geo.js                        distance, bearing, knots/mph/km conversions
+src/store.js                      /data/nhc.json: storms already seen (atomic writes)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
-test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
+test/                             node --test, against the SDK's fake Gladys and a fake NHC
+test/fixtures/nhc/                real NHC products of 7/11/2026 + Melissa advisory 25 (2025)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +75,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German ("du") and Spanish
+  ("usted"): manifest, messages, feature names, widget, and `docs/*.md` with the
+  same sections. `test/i18n.test.js` enforces it.
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -251,3 +257,37 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## NHC (cette intégration)
+
+- **Sources** (sans clé, domaine public) : `https://www.nhc.noaa.gov/CurrentStorms.json` (`{ "activeStorms": [] }` sans
+  tempête) et le flux RSS de chaque bassin, `index-at.xml`, `index-ep.xml`, `index-cp.xml`. Les flux `gtwo_*.xml` du
+  seul Outlook répondent **une page HTML** (7/11/2026) : ne pas s'en servir.
+- `CurrentStorms.json` : `intensity` en **nœuds** (chaîne), `movementSpeed` en **mph**, `movementDir` en degrés (vers
+  où va la tempête), `latitudeNumeric`/`longitudeNumeric` signés. `classification` : TD, STD, TS, STS, HU, PTC, PC ;
+  seuls TS, STS et HU portent un nom de la liste de la saison (les dépressions sont numérotées : « Four »). Pas de
+  catégorie : calculée depuis le vent (64, 83, 96, 113, 137 kt). `windWatchesWarnings` est un produit GIS (KMZ) :
+  les veilles se lisent dans le texte de l'avis.
+- Vents arrondis à 5 mph et 5 km/h, comme les avis (45 kt : « 50 MPH...85 KM/H »).
+- Flux de bassin : premier `item` = Tropical Weather Outlook (`<br />` dans un CDATA), une ligne
+  `* Formation chance through 48 hours...low...10 percent.` (et 7 days) **par perturbation** ; aucune ligne = rien
+  attendu (0 %). Hors saison (décembre à mai) l'Outlook n'est plus émis : au-delà de 24 h, les probabilités ne sont
+  pas publiées. Puis, par tempête, le dernier « Public Advisory » (ou « Intermediate ») dans un `<pre>` : l'id ATCF
+  (`CP042026`) est dans l'en-tête ; section `WATCHES AND WARNINGS` → `SUMMARY OF WATCHES AND WARNINGS IN EFFECT:`,
+  lignes `A Hurricane Warning is in effect for...` puis `* zone` (une zone longue continue sans étoile), jusqu'à une
+  ligne vide ; « There are no coastal watches or warnings in effect. » = aucune. Section absente = inconnu (rien ne
+  se déclenche).
+- Déclencheurs : un état par tempête dans `/data/nhc.json` (`named`, `inside`, `category`, `kinds`) ; premier cycle
+  après le tout premier démarrage ou un changement de configuration : amorçage sans déclencheur. Sortie du rayon à
+  +10 % (hystérésis). Une tempête est oubliée 3 jours après sa disparition.
+- Veilles : `kinds` à `null` quand l'avis n'a pas pu être lu pendant l'amorçage (flux en panne) : au retour du flux, les
+  veilles en vigueur servent de référence sans déclencher. Hors amorçage, un avis absent vaut `[]`. Un titre « Potential
+  Tropical Cyclone Nine Advisory Number 1 » n'a pas « Public » : on prend tout « Advisory Number » sauf « Forecast
+  Advisory ». Avec la portée « rayon », ce qui arrive hors du rayon est mémorisé sans être signalé (documenté).
+- Couples : `counter-sensor/integer` pour les catégories (0-5) et les probabilités (unité `percent`), pas de
+  `risk/integer` (0-3 seulement dans le front). `speed-sensor/integer` en `mile-per-hour`/`kilometer-per-hour`,
+  `distance-sensor/decimal` en `mile`/`km`, `angle-sensor/integer` en `degree`. Changer d'unité change la structure :
+  « Mettre à jour » dans Découverte.
+- Le widget reçoit `units` = `'metric'` ou `'us'` (pas `imperial`).
+- Pas de `countries` dans le manifeste (bassins qui touchent États-Unis, Mexique, Amérique centrale, Caraïbes dont les
+  Antilles françaises) : il exigerait `>=5.3.0` et masquerait l'intégration hors des pays listés.

@@ -30,6 +30,14 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+The integration needs no account and stores no secret. It reads the public
+products of the National Hurricane Center (`www.nhc.noaa.gov`, HTTPS, no key)
+and the houses of Gladys, for the location of the home (the `location` access
+of the manifest). Under `/data` it keeps one file, `nhc.json`: the identifiers
+of the storms already seen, their category and the kinds of watches of their
+advisory, nothing about the user. The coordinates of the home are never sent,
+nor written to `/data` or to the logs.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and the NHC services.

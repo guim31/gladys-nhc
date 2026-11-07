@@ -1,77 +1,119 @@
+// -----------------------------------------------------------------------------
+// The `storms` widget (checked by the SDK's validator of the core vocabulary
+// and budget), the scene action `read_storms` and the action `check_now`.
+// -----------------------------------------------------------------------------
+
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateWidgetContent } from '@gladysassistant/integration-sdk';
-import { createFakeGladys } from '@gladysassistant/integration-sdk/testing';
-import { buildDiscoveredDevices } from '../src/devices/index.js';
-import { simulateLanSession } from '../src/devices/plug.js';
-import { DEMO_STATUS_WIDGET, WIDGETS, refreshWidgets } from '../src/widgets.js';
-import { normalizeConfig } from '../src/config.js';
+import { CONFIG_ACTION, SCENE_ACTION } from '../src/actions.js';
+import { WIDGET_KEY } from '../src/monitor.js';
+import {
+  KINGSTON,
+  MELISSA,
+  MELISSA_ADVISORY,
+  PENA,
+  START,
+  createApi,
+  createWorld,
+} from './helpers/world.js';
 
-const gladys = createFakeGladys();
-const config = normalizeConfig();
-const demoStatus = WIDGETS[DEMO_STATUS_WIDGET];
+async function world(t, options = {}) {
+  const w = await createWorld(options);
+  t.after(() => w.app.stop());
+  return w;
+}
 
-// What the SDK passes to onWidgetGet, plus the config index.js adds.
-const getContent = (cfg = config) =>
-  demoStatus.get(gladys, { settings: {}, language: 'en', units: 'metric', config: cfg });
+async function widget(w, request) {
+  const { data } = await w.fake.widgetGet(WIDGET_KEY, request);
+  return data.content;
+}
 
-test('the demo_status content is rendered exactly as sent', async () => {
-  // [] = nothing the core would drop, truncate or trim to the content budget.
-  assert.deepEqual(validateWidgetContent(await getContent()), []);
-});
+function melissaApi() {
+  const api = createApi();
+  api.addStorm({
+    id: MELISSA,
+    name: 'Melissa',
+    classification: 'HU',
+    intensity: 145,
+    latitude: 16.4,
+    longitude: -78.2,
+  });
+  api.addAdvisory('at', MELISSA_ADVISORY, { published: START - 60000 });
+  return api;
+}
 
-test('the degraded plug connection content is valid too', async () => {
-  simulateLanSession(false);
-  try {
-    const content = await getContent();
+for (const language of ['en', 'fr', 'de', 'es']) {
+  test(`the widget is valid in ${language}, strongest storm first`, async (t) => {
+    const w = await world(t, { api: melissaApi(), config: KINGSTON });
+    const content = await widget(w, { language, units: 'metric' });
     assert.deepEqual(validateWidgetContent(content), []);
-    const status = content.components.find((component) => component.type === 'status');
-    assert.ok(
-      status.items.some((item) => item.color === 'warning'),
-      'degraded shows a warning',
+    assert.deepEqual(
+      content.components.map((c) => c.type),
+      ['text', 'card-list', 'status', 'text', 'button'],
     );
-  } finally {
-    simulateLanSession(true);
-  }
+    const [first, second] = content.components[1].items;
+    assert.match(first.title, /Melissa$/);
+    assert.match(second.title, /Pena$/);
+    assert.equal(first.badge.color, 'danger');
+    assert.match(first.subtitle, /^270 km\/h · /);
+    assert.match(first.description, /Jamaica/);
+    assert.equal(content.components[2].items.length, 3);
+  });
+}
+
+test('the widget follows the units of the user, and hides the outlook if asked', async (t) => {
+  const w = await world(t, { config: { units: 'metric', language: 'en' } });
+  const us = await widget(w, { language: 'en', units: 'us' });
+  assert.match(us.components[1].items[0].subtitle, /^50 mph · 587 mi SSE of home$/);
+  const metric = await widget(w, { language: 'en', units: 'metric' });
+  assert.match(metric.components[1].items[0].subtitle, /^85 km\/h · 9\d\d km SSE of home$/);
+  const hidden = await widget(w, { language: 'en', settings: { show_outlook: false } });
+  assert.ok(!hidden.components.some((c) => c.type === 'status'));
+  const noLink = await widget(w, { language: 'en', settings: { show_link: false } });
+  assert.ok(!noLink.components.some((c) => c.type === 'button'));
 });
 
-test('the live tiles reference features the integration publishes', async () => {
-  const featureIds = new Set(
-    buildDiscoveredDevices(gladys, config).flatMap((device) =>
-      device.features.map((feature) => feature.external_id),
-    ),
+test('the widget without storm, and before the NHC ever answered', async (t) => {
+  const api = createApi();
+  api.end(PENA);
+  const w = await world(t, { api });
+  const quiet = await widget(w, { language: 'fr' });
+  assert.equal(quiet.components[0].text, 'Aucun système actif');
+  assert.ok(!quiet.components.some((c) => c.type === 'card-list'));
+  const down = createApi();
+  down.down = 'network';
+  const w2 = await world(t, { api: down });
+  const waiting = await widget(w2, { language: 'en' });
+  assert.equal(waiting.components[0].text, 'Waiting for the NHC…');
+  assert.deepEqual(validateWidgetContent(waiting), []);
+});
+
+test('read_storms: one sentence, the count and the highest category', async (t) => {
+  const w = await world(t, { api: melissaApi(), config: { ...KINGSTON, language: 'en' } });
+  const { data } = await w.fake.sceneAction(SCENE_ACTION, {});
+  assert.equal(data.outputs.count, 2);
+  assert.equal(data.outputs.max_category, 5);
+  assert.match(
+    data.outputs.text,
+    /^2 active systems: Hurricane Melissa, category 5, 165 mph, 1\d\d mi SW of home; Tropical Storm Pena, 50 mph, .+\. Highest formation chance in 7 days: 20 % \(Eastern Pacific\)\.$/,
   );
-  const liveTiles = (await getContent()).components.filter((c) => c.device_feature);
-  assert.ok(liveTiles.length > 0, 'the template demonstrates a device-bound tile');
-  for (const tile of liveTiles) {
-    assert.ok(featureIds.has(tile.device_feature), `unknown feature ${tile.device_feature}`);
-  }
 });
 
-test('every button action of the content is handled and answers a short toast', async () => {
-  const buttons = (await getContent()).components.filter((c) => c.type === 'button' && c.action);
-  assert.ok(buttons.length > 0, 'the template demonstrates a widget action');
-  for (const { action } of buttons) {
-    const message = await demoStatus.action(gladys, {
-      actionKey: action.key,
-      params: action.params ?? {},
-      settings: {},
-      config,
-    });
-    assert.ok(message.en, 'the toast carries at least the mandatory `en` text');
-    assert.ok(message.en.length <= 200, 'toasts are capped at 200 characters');
-  }
-});
-
-test('an unknown widget action fails, so the user sees the error', async () => {
-  await assert.rejects(
-    demoStatus.action(gladys, { actionKey: 'unknown', params: {}, settings: {}, config }),
-    /Unknown widget action/,
+test('read_storms fails when the NHC never answered; check_now says it in four languages', async (t) => {
+  const api = createApi();
+  api.down = 503;
+  const w = await world(t, { api });
+  const failed = await w.fake.sceneAction(SCENE_ACTION, {});
+  assert.match(JSON.stringify(failed), /National Hurricane Center ne répond pas/);
+  const answer = await w.fake.action(CONFIG_ACTION, {});
+  assert.match(JSON.stringify(answer), /does not answer/);
+  api.down = false;
+  w.clock.advance(20 * 60 * 1000);
+  const ok = JSON.stringify(await w.fake.action(CONFIG_ACTION, {}));
+  assert.match(
+    ok,
+    /1 système actif : Tempête tropicale Pena, 50 mph, à 587 mi au SSE de la maison\./,
   );
-});
-
-test('refreshWidgets nudges every widget', () => {
-  const fresh = createFakeGladys();
-  refreshWidgets(fresh);
-  assert.deepEqual(fresh.fake.widgetRefreshes, Object.keys(WIDGETS));
+  assert.match(ok, /Vérifié à /);
 });
