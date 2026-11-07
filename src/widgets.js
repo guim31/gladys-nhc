@@ -1,169 +1,228 @@
 // -----------------------------------------------------------------------------
-// Dashboard widgets (SDK v0.14+, Gladys 5.1+).
+// Dashboard widget (manifest `widgets`, Gladys 5.1+): `storms`.
 //
-// A widget puts the integration's own data on the Gladys dashboard without a
-// dedicated core widget. The manifest `widgets` field declares its identity
-// (key, label, icon, optional per-instance `settings`); at runtime the
-// integration returns a DECLARATIVE content — `text`, `value`, `gauge`,
-// `status`, `chart`, `card-list`, `image`, `button` — that the core renders
-// with its own theme, dark mode and translations. No HTML, no CSS.
+// A heading with the number of active systems, then the storms of the
+// followed basins as a `card-list` (8 rows at most, the core's cap), strongest
+// first: classification and name as title, wind and distance as subtitle, the
+// Saffir-Simpson category as a coloured badge. Tapping a row opens the core's
+// detail panel: position, movement, pressure, coastal watches and warnings,
+// and links to the NHC advisory and graphics. Then, unless hidden by the
+// `show_outlook` setting, one status row per followed basin with the formation
+// chances of the Tropical Weather Outlook. The footer gives the source and the
+// time of the last reading, and a link to the NHC.
+// Budget: 2 texts, 1 card-list, 1 status, 1 button.
 //
-// Each entry of WIDGETS is keyed by the widget `key` and exposes:
-//   - get(gladys, { settings, language, units, config }): the content,
-//     registered by index.js with `gladys.onWidgetGet(key, ...)`;
-//   - action(gladys, { actionKey, params, settings, config }) (optional): a
-//     tapped `button` carrying an `action`, registered with
-//     `gladys.onWidgetAction`.
-//
-// Check your contents in the tests with `validateWidgetContent` (exported by
-// the SDK, see test/widgets.test.js), or run with DEBUG=gladys-integration-sdk
-// to have the SDK log every violation of the vocabulary and the budget.
+// Units: the user's preference sent with the request ('metric' or 'us'),
+// else the one of the configuration.
 // -----------------------------------------------------------------------------
 
+import { WIDGET_COLORS } from '@gladysassistant/integration-sdk';
 import {
-  createLogger,
-  DEVICE_FEATURE_CATEGORIES,
-  DEVICE_TRANSPORTS,
-  WIDGET_COLORS,
-} from '@gladysassistant/integration-sdk';
-import { identifyDevice } from './devices/index.js';
-import { weatherStation } from './devices/weatherStation.js';
-import { plug } from './devices/plug.js';
-import { light } from './devices/light.js';
+  BASIN_NAMES,
+  WATCH_NAMES,
+  awayText,
+  categoryColor,
+  formatDate,
+  movementText,
+  stormTitle,
+  windText,
+} from './messages.js';
+import { WIDGET_KEY } from './monitor.js';
+import { NHC_SITE, WATCH_KINDS } from './nhc.js';
 
-const logger = createLogger({ name: 'widgets' });
+export const MAX_ITEMS = 8;
+export const TTL_SECONDS = 300;
 
-// Widget key, as declared in the manifest `widgets` field.
-export const DEMO_STATUS_WIDGET = 'demo_status';
-
-// Keys of the `button` actions the demo_status content declares.
-const DEMO_STATUS_ACTIONS = { IDENTIFY_LIGHT: 'identify_light' };
-
-// How the plug transport reads in the status list.
-const TRANSPORT_STATUS = {
-  [DEVICE_TRANSPORTS.LOCAL]: { value: { en: 'Local', fr: 'Locale' }, color: WIDGET_COLORS.SUCCESS },
-  [DEVICE_TRANSPORTS.CLOUD]: { value: { en: 'Cloud', fr: 'Cloud' }, color: WIDGET_COLORS.INFO },
-  [DEVICE_TRANSPORTS.UNREACHABLE]: {
-    value: { en: 'Unreachable', fr: 'Injoignable' },
-    color: WIDGET_COLORS.DANGER,
+export const TEXT = {
+  waiting: {
+    en: 'Waiting for the NHC…',
+    fr: 'En attente du NHC…',
+    de: 'Warte auf das NHC…',
+    es: 'Esperando al NHC…',
+  },
+  none: {
+    en: 'No active system',
+    fr: 'Aucun système actif',
+    de: 'Kein aktives System',
+    es: 'Ningún sistema activo',
+  },
+  one: {
+    en: '1 active system',
+    fr: '1 système actif',
+    de: '1 aktives System',
+    es: '1 sistema activo',
+  },
+  many: {
+    en: ' active systems',
+    fr: ' systèmes actifs',
+    de: ' aktive Systeme',
+    es: ' sistemas activos',
+  },
+  source: {
+    en: 'Source: NOAA NHC',
+    fr: 'Source : NOAA NHC',
+    de: 'Quelle: NOAA NHC',
+    es: 'Fuente: NOAA NHC',
+  },
+  advisory: {
+    en: 'Public advisory',
+    fr: 'Bulletin public',
+    de: 'Öffentliche Meldung',
+    es: 'Aviso público',
+  },
+  graphics: {
+    en: 'Forecast cone',
+    fr: 'Cône de prévision',
+    de: 'Prognosekegel',
+    es: 'Cono de pronóstico',
+  },
+  site: { en: 'NHC', fr: 'NHC', de: 'NHC', es: 'NHC' },
+  category: { en: 'Cat.', fr: 'Cat.', de: 'Kat.', es: 'Cat.' },
+  pressure: { en: 'Pressure', fr: 'Pression', de: 'Luftdruck', es: 'Presión' },
+  position: { en: 'Position', fr: 'Position', de: 'Position', es: 'Posición' },
+  noWatch: {
+    en: 'No coastal watch or warning',
+    fr: 'Aucune veille ni alerte côtière',
+    de: 'Keine Küstenwarnung',
+    es: 'Ninguna vigilancia ni aviso costero',
+  },
+  outlook: {
+    en: ({ h48, d7 }) => `${h48}% 48 h · ${d7}% 7 days`,
+    fr: ({ h48, d7 }) => `${h48} % 48 h · ${d7} % 7 jours`,
+    de: ({ h48, d7 }) => `${h48} % 48 h · ${d7} % 7 Tage`,
+    es: ({ h48, d7 }) => `${h48} % 48 h · ${d7} % 7 días`,
+  },
+  noOutlook: {
+    en: 'No outlook',
+    fr: 'Pas de prévision',
+    de: 'Keine Prognose',
+    es: 'Sin previsión',
   },
 };
 
-// A live tile references a feature by its external_id: read it from the
-// discovery payload itself, so the widget and the device never disagree.
-function featureExternalId(gladys, config, blueprint, category) {
-  const device = blueprint.buildDevice(gladys, config);
-  return device.features.find((feature) => feature.category === category).external_id;
+const t = (text, language) => text[language] ?? text.en;
+// French puts a space before a colon.
+const labelled = (label, value, language) => `${label}${language === 'fr' ? ' : ' : ': '}${value}`;
+const clip = (text, max) => (text.length <= max ? text : `${text.slice(0, max - 1)}…`);
+const unitsOf = (requested, fallback) =>
+  requested === 'us' ? 'imperial' : requested === 'metric' ? 'metric' : fallback;
+
+function heading(storms, language) {
+  if (storms.length === 0) {
+    return t(TEXT.none, language);
+  }
+  return storms.length === 1 ? t(TEXT.one, language) : `${storms.length}${t(TEXT.many, language)}`;
 }
 
-function plugConnectionStatus(gladys, config) {
-  const { transport, degraded } = plug.transport(gladys, config);
-  const { value, color } = TRANSPORT_STATUS[transport];
-  if (degraded) {
+const position = (storm) =>
+  `${Math.abs(storm.latitude).toFixed(1)}${storm.latitude >= 0 ? 'N' : 'S'} ${Math.abs(storm.longitude).toFixed(1)}${storm.longitude >= 0 ? 'E' : 'W'}`;
+
+/** One row of the list, and its detail panel. */
+export function itemOf(storm, language, units) {
+  const watches = storm.watches
+    ? WATCH_KINDS.filter((kind) => storm.watches[kind]).map((kind) =>
+        labelled(WATCH_NAMES[language][kind], storm.watches[kind].join(', '), language),
+      )
+    : [];
+  const details = [
+    labelled(t(TEXT.position, language), position(storm), language),
+    movementText(storm, language, units),
+    storm.pressureMb === null
+      ? null
+      : labelled(t(TEXT.pressure, language), `${storm.pressureMb} hPa`, language),
+    ...(storm.watches && watches.length === 0 ? [t(TEXT.noWatch, language)] : watches),
+    storm.updatedAt === null ? null : formatDate(storm.updatedAt, language),
+  ];
+  const links = [
+    storm.advisoryUrl && { url: storm.advisoryUrl, label: t(TEXT.advisory, language) },
+    storm.graphicsUrl && { url: storm.graphicsUrl, label: t(TEXT.graphics, language) },
+  ].filter(Boolean);
+  return {
+    title: clip(stormTitle(storm, language), 60),
+    subtitle: clip(
+      [windText(storm, language, units), awayText(storm, language, units)]
+        .filter(Boolean)
+        .join(' · '),
+      60,
+    ),
+    badge: {
+      text:
+        storm.category > 0
+          ? `${t(TEXT.category, language)} ${storm.category}`
+          : storm.classification,
+      color: categoryColor(storm.category),
+    },
+    description: clip(details.filter(Boolean).join('\n'), 1000),
+    ...(links.length > 0 ? { links } : {}),
+  };
+}
+
+/** One status row per followed basin: the formation chances of the outlook. */
+function outlookRows(monitor, language) {
+  return monitor.config.basins.map((basin) => {
+    const outlook = monitor.outlook(basin);
+    if (!outlook) {
+      return {
+        label: BASIN_NAMES[language][basin],
+        value: t(TEXT.noOutlook, language),
+        color: WIDGET_COLORS.NEUTRAL,
+      };
+    }
+    const chance = outlook.chance7d;
     return {
-      value: { en: `${value.en} (degraded mode)`, fr: `${value.fr} (mode dégradé)` },
-      color: WIDGET_COLORS.WARNING,
+      label: BASIN_NAMES[language][basin],
+      value: TEXT.outlook[language]({ h48: outlook.chance48h, d7: chance }),
+      // The NHC colours: low under 40 %, medium 40-60 %, high above.
+      color:
+        chance > 60
+          ? WIDGET_COLORS.DANGER
+          : chance >= 40
+            ? WIDGET_COLORS.WARNING
+            : chance > 0
+              ? WIDGET_COLORS.INFO
+              : WIDGET_COLORS.SUCCESS,
     };
-  }
-  return { value, color };
+  });
 }
 
 export const WIDGETS = {
-  [DEMO_STATUS_WIDGET]: {
-    // `settings` holds the per-instance values of the declared `settings`
-    // (none here); `language` and `units` are those of the user viewing the
-    // dashboard, for the values you format yourself. Multi-language objects
-    // (`{ en, fr }`) are picked by the core, like everywhere else.
-    async get(gladys, { config }) {
-      logger.debug(`onWidgetGet <- ${DEMO_STATUS_WIDGET}`);
-      return {
-        // Reload policy: the computed parts below only change with the
-        // config, and index.js nudges the widget on every (re)connection and
-        // config update (see refreshWidgets) — the TTL is just a safety net.
-        ttl_seconds: 300,
-        components: [
-          // Device-bound tiles: LIVE, they follow the published states over
-          // the core's real-time path. No TTL, no nudge involved.
-          {
-            type: 'value',
-            label: { en: 'Temperature', fr: 'Température' },
-            icon: 'thermometer',
-            device_feature: featureExternalId(
-              gladys,
-              config,
-              weatherStation,
-              DEVICE_FEATURE_CATEGORIES.TEMPERATURE_SENSOR,
-            ),
-          },
-          {
-            type: 'value',
-            label: { en: 'Office plug', fr: 'Prise du bureau' },
-            icon: 'zap',
-            device_feature: featureExternalId(
-              gladys,
-              config,
-              plug,
-              DEVICE_FEATURE_CATEGORIES.ENERGY_SENSOR,
-            ),
-          },
-          // Computed rows: what the integration knows that no device feature
-          // carries. Served from the core cache until the TTL or a nudge.
-          {
-            type: 'status',
-            items: [
-              {
-                label: { en: 'Plug connection', fr: 'Connexion de la prise' },
-                icon: 'wifi',
-                ...plugConnectionStatus(gladys, config),
-              },
-              {
-                label: { en: 'Observed location', fr: 'Position observée' },
-                icon: 'map-pin',
-                value: `${config.latitude.toFixed(2)}, ${config.longitude.toFixed(2)}`,
-                color: WIDGET_COLORS.NEUTRAL,
-              },
-            ],
-          },
-          // `params` are declared HERE and sent back as-is: the handler never
-          // receives user input (a dashboard can hang on a public wall).
-          {
-            type: 'button',
-            label: { en: 'Identify the light', fr: 'Identifier la lampe' },
-            icon: 'eye',
-            style: 'secondary',
-            action: {
-              key: DEMO_STATUS_ACTIONS.IDENTIFY_LIGHT,
-              params: { device: light.deviceExternalId(gladys) },
-            },
-          },
-        ],
-      };
-    },
-
-    // Resolve an optional toast (string or multi-language object, ≤ 200
-    // characters). After a successful action the core drops the cached
-    // content and every open dashboard refetches it: no nudge needed.
-    async action(gladys, { actionKey, params, config }) {
-      logger.info(`onWidgetAction <- ${DEMO_STATUS_WIDGET}.${actionKey}`);
-      if (actionKey === DEMO_STATUS_ACTIONS.IDENTIFY_LIGHT) {
-        return identifyDevice(gladys, params.device, config);
+  [WIDGET_KEY]: {
+    async get(monitor, { language = 'en', units, settings = {} } = {}) {
+      const lang = BASIN_NAMES[language] ? language : 'en';
+      const unit = unitsOf(units, monitor.config.units);
+      const updated = monitor.lastSuccessAt;
+      const source = t(TEXT.source, lang);
+      const components = [
+        {
+          type: 'text',
+          variant: 'heading',
+          text: updated === null ? t(TEXT.waiting, lang) : heading(monitor.storms, lang),
+        },
+      ];
+      if (monitor.storms.length > 0) {
+        components.push({
+          type: 'card-list',
+          display: 'list',
+          items: monitor.storms.slice(0, MAX_ITEMS).map((storm) => itemOf(storm, lang, unit)),
+        });
       }
-      // Throwing acks the action as failed: the message reaches the user.
-      throw new Error(`Unknown widget action: ${actionKey}`);
+      if (settings.show_outlook !== false && updated !== null && monitor.config.basins.length > 0) {
+        components.push({ type: 'status', items: outlookRows(monitor, lang) });
+      }
+      components.push(
+        {
+          type: 'text',
+          variant: 'caption',
+          text: updated === null ? source : `${source} · ${formatDate(updated, lang)}`,
+        },
+        {
+          type: 'button',
+          label: t(TEXT.site, lang),
+          icon: 'external-link',
+          link: { url: NHC_SITE },
+        },
+      );
+      return { ttl_seconds: TTL_SECONDS, components };
     },
   },
 };
-
-/**
- * Freshness nudge: ask the core to re-pull every widget NOW instead of
- * waiting for the content TTL. Call it when you KNOW a computed content
- * changed (here: the config, which drives the plug transport and the observed
- * location) — and after every (re)connection, since the nudges are
- * fire-and-forget: rate-limited core-side to 1 per 10 s per widget, dropped
- * silently while disconnected.
- */
-export function refreshWidgets(gladys) {
-  for (const key of Object.keys(WIDGETS)) {
-    gladys.requestWidgetRefresh(key);
-  }
-}
