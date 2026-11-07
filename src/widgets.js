@@ -9,7 +9,7 @@
 // and links to the NHC advisory and graphics. Then, unless hidden by the
 // `show_outlook` setting, one status row per followed basin with the formation
 // chances of the Tropical Weather Outlook. The footer gives the source and the
-// time of the last reading, and a link to the NHC.
+// time of the last reading, and a link to the NHC (setting `show_link`).
 // Budget: 2 texts, 1 card-list, 1 status, 1 button.
 //
 // Units: the user's preference sent with the request ('metric' or 'us'),
@@ -209,19 +209,19 @@ export const WIDGETS = {
       if (settings.show_outlook !== false && updated !== null && monitor.config.basins.length > 0) {
         components.push({ type: 'status', items: outlookRows(monitor, lang) });
       }
-      components.push(
-        {
-          type: 'text',
-          variant: 'caption',
-          text: updated === null ? source : `${source} · ${formatDate(updated, lang)}`,
-        },
-        {
+      components.push({
+        type: 'text',
+        variant: 'caption',
+        text: updated === null ? source : `${source} · ${formatDate(updated, lang)}`,
+      });
+      if (settings.show_link !== false) {
+        components.push({
           type: 'button',
           label: t(TEXT.site, lang),
           icon: 'external-link',
           link: { url: NHC_SITE },
-        },
-      );
+        });
+      }
       return { ttl_seconds: TTL_SECONDS, components };
     },
   },

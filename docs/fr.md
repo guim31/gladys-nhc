@@ -17,8 +17,8 @@ et de votre service météorologique national. Non affiliée à la NOAA ni au Na
   lettres), sa catégorie et son vent soutenu, et la plus forte probabilité de formation à 48 heures et
   à 7 jours.
 - Un appareil **Ouragan le plus proche** : la tempête la plus proche de votre maison, sa catégorie, son
-  vent soutenu, sa distance, sa direction (vue depuis la maison) et son déplacement, avec leur
-  historique.
+  vent soutenu, sa distance, sa direction (vue depuis la maison) et son déplacement, avec l'historique de la catégorie, du vent et de la distance. Sans tempête, la
+  direction garde sa dernière valeur.
 - Un **widget** de tableau de bord listant les tempêtes actives, la plus forte en tête, chacune avec
   son bulletin et son cône de prévision, et la prévision de formation de chaque bassin.
 - Quatre **déclencheurs de scène** : nouvelle tempête nommée, tempête dans le rayon autour de votre
@@ -92,13 +92,16 @@ en tête (8 au plus) : classification et nom, vent et distance, et une pastille 
 pour un ouragan majeur, orange pour un ouragan). Touchez une tempête pour voir sa position, son
 déplacement, sa pression, les veilles et alertes côtières en vigueur et les liens vers le bulletin public
 et le cône de prévision. En dessous, une ligne par bassin avec les probabilités de formation à 48 heures
-et à 7 jours (réglage **Afficher la prévision de formation** pour la masquer). Le widget suit les unités
+et à 7 jours (réglage **Afficher la prévision de formation** pour la masquer), et un lien vers le NHC (réglage
+**Afficher le lien vers le NHC**). Le widget suit les unités
 de l'utilisateur qui le regarde.
 
 ## Déclencheurs de scène
 
 Tous se filtrent par **bassin**. « Déclencheurs pour » choisit si les déclencheurs nouvelle tempête,
-catégorie et veille concernent toutes les tempêtes des bassins suivis ou seulement celles du rayon.
+catégorie et veille concernent toutes les tempêtes des bassins suivis ou seulement celles du rayon. Avec le rayon, un nom,
+une catégorie ou une veille arrivés avant que la tempête n'entre dans le rayon ne sont pas signalés
+ensuite : seul **tempête dans le rayon** se déclenche à l'entrée.
 
 - **NHC : nouvelle tempête nommée** : un système devient tempête tropicale (ou subtropicale) ou ouragan
   et reçoit un nom.

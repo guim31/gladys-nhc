@@ -1298,6 +1298,18 @@
           },
           "required": false,
           "default": true
+        },
+        {
+          "key": "show_link",
+          "type": "boolean",
+          "label": {
+            "en": "Show the link to the NHC",
+            "fr": "Afficher le lien vers le NHC",
+            "de": "Link zum NHC anzeigen",
+            "es": "Mostrar el enlace al NHC"
+          },
+          "required": false,
+          "default": true
         }
       ]
     }

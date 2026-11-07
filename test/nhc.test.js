@@ -168,3 +168,30 @@ test('the configuration is normalized', () => {
   assert.equal(normalizeConfig({ latitude: '95', longitude: '0' }).invalidCenter, true);
   assert.deepEqual(normalizeConfig({ basins: [] }).basins, []);
 });
+
+test('a Potential Tropical Cyclone advisory counts, a forecast advisory does not', () => {
+  const ptc = MELISSA_ADVISORY.replace(/AL132025/g, 'AL092026');
+  const item = (title, body, date) =>
+    `<item><title>${title}</title><description><![CDATA[<pre>${body}</pre>]]></description><pubDate>${date}</pubDate></item>`;
+  const feed = `<rss><channel>${[
+    item('Potential Tropical Cyclone Nine Advisory Number 1', ptc, 'Sat, 07 Nov 2026 15:00:00 GMT'),
+    item(
+      'Potential Tropical Cyclone Nine Forecast Advisory Number 1',
+      'AL092026 no watches',
+      'Sat, 07 Nov 2026 16:00:00 GMT',
+    ),
+    item(
+      'Atlantic Tropical Weather Outlook',
+      '* Formation chance through 7 days...low...10 percent.',
+      'Sat, 07 Nov 2026 12:00:00 GMT',
+    ),
+    item(
+      'Special Atlantic Tropical Weather Outlook',
+      '* Formation chance through 7 days...high...70 percent.',
+      'Sat, 07 Nov 2026 14:00:00 GMT',
+    ),
+  ].join('')}</channel></rss>`;
+  const parsed = parseFeed(feed);
+  assert.deepEqual(Object.keys(parsed.advisories.al092026.watches).length, 3);
+  assert.equal(parsed.outlook.chance7d, 70);
+});

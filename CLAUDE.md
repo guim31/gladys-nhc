@@ -280,6 +280,10 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Déclencheurs : un état par tempête dans `/data/nhc.json` (`named`, `inside`, `category`, `kinds`) ; premier cycle
   après le tout premier démarrage ou un changement de configuration : amorçage sans déclencheur. Sortie du rayon à
   +10 % (hystérésis). Une tempête est oubliée 3 jours après sa disparition.
+- Veilles : `kinds` à `null` quand l'avis n'a pas pu être lu pendant l'amorçage (flux en panne) : au retour du flux, les
+  veilles en vigueur servent de référence sans déclencher. Hors amorçage, un avis absent vaut `[]`. Un titre « Potential
+  Tropical Cyclone Nine Advisory Number 1 » n'a pas « Public » : on prend tout « Advisory Number » sauf « Forecast
+  Advisory ». Avec la portée « rayon », ce qui arrive hors du rayon est mémorisé sans être signalé (documenté).
 - Couples : `counter-sensor/integer` pour les catégories (0-5) et les probabilités (unité `percent`), pas de
   `risk/integer` (0-3 seulement dans le front). `speed-sensor/integer` en `mile-per-hour`/`kilometer-per-hour`,
   `distance-sensor/decimal` en `mile`/`km`, `angle-sensor/integer` en `degree`. Changer d'unité change la structure :

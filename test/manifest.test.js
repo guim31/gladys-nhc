@@ -106,18 +106,17 @@ test('the outputs of read_storms are the declared ones', async (t) => {
 test('the scene triggers the monitor fires are declared, with their filters and variables', async (t) => {
   assert.deepEqual(keysOf(manifest.scene_triggers), Object.values(TRIGGERS));
   const api = createApi();
+  const world = await createWorld({ api, config: KINGSTON });
+  t.after(() => world.app.stop());
+  // A new hurricane within the radius, with warnings in effect; Pena strengthens.
   api.addStorm({
     id: MELISSA,
     name: 'Melissa',
-    classification: 'TD',
-    intensity: 30,
-    latitude: 14,
-    longitude: -74,
+    classification: 'HU',
+    intensity: 145,
+    latitude: 16.4,
+    longitude: -78.2,
   });
-  const world = await createWorld({ api, config: KINGSTON });
-  t.after(() => world.app.stop());
-  // Named, then a hurricane within the radius with warnings in effect.
-  api.setStorm(MELISSA, { classification: 'HU', intensity: 145, latitude: 16.4, longitude: -78.2 });
   api.addAdvisory('at', MELISSA_ADVISORY, { published: START });
   api.setStorm(PENA, { classification: 'HU', intensity: 70 });
   await cycle(world);

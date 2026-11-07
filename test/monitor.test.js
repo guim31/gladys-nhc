@@ -316,3 +316,33 @@ test('the container refreshes on its own timer, without onPoll', async (t) => {
   assert.ok(api.requests.length > before);
   assert.equal(lastValue(w, basinIds(w.gladys, 'central_pacific').device, 'max_wind'), 65);
 });
+
+test('a feed down when the storm is first seen: its watches are a baseline, not news', async (t) => {
+  const api = createApi();
+  api.addStorm({
+    id: MELISSA,
+    name: 'Melissa',
+    classification: 'HU',
+    intensity: 145,
+    latitude: 16.4,
+    longitude: -78.2,
+  });
+  api.feedDown = 503;
+  const w = await world(t, { api, config: KINGSTON });
+  api.feedDown = false;
+  api.addAdvisory('at', MELISSA_ADVISORY, { published: START });
+  await cycle(w);
+  assert.deepEqual(w.fake.sceneEvents, []);
+  assert.equal(w.monitor.data.known[MELISSA].kinds.length, 3);
+});
+
+test('the storm gone, the nearest device says so, movement included', async (t) => {
+  const api = createApi();
+  const w = await world(t, { api });
+  await createAll(w);
+  api.end(PENA);
+  await cycle(w);
+  const near = nearestIds(w.gladys).device;
+  assert.equal(lastValue(w, near, 'storm'), 'Aucun système actif');
+  assert.equal(lastValue(w, near, 'movement'), 'Aucun système actif');
+});

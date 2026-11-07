@@ -17,7 +17,8 @@ Service.
 - One **basin device** per followed basin: number of active systems, strongest system (in words), its
   category and sustained wind, and the highest formation chance within 48 hours and 7 days.
 - A **Nearest hurricane** device: the storm nearest to your home, its category, sustained wind,
-  distance, direction (seen from your home) and movement, with their history.
+  distance, direction (seen from your home) and movement, with the history of the category, wind and distance. Without any storm, the direction keeps its
+  last value.
 - A **dashboard widget** listing the active storms, strongest first, each with its advisory and
   forecast cone, and the formation outlook of each basin.
 - Four **scene triggers**: a new named storm, a storm within the radius around your home, a category
@@ -91,12 +92,14 @@ first (8 at most): classification and name, wind and distance, and a badge with 
 a major hurricane, orange for a hurricane). Tap a storm to see its position, movement, pressure, the
 coastal watches and warnings in effect and the links to the public advisory and the forecast cone.
 Below, one row per basin with the formation chances within 48 hours and 7 days (setting **Show the
-formation outlook** to hide it). The widget follows the units of the user who looks at it.
+formation outlook** to hide it), and a link to the NHC (setting **Show the link to the NHC**). The widget follows the units of the user who looks at it.
 
 ## Scene triggers
 
 All of them can be filtered by **basin**. "Triggers about" chooses whether the new storm, category and
-watch triggers speak about every storm of the followed basins or only those within the radius.
+watch triggers speak about every storm of the followed basins or only those within the radius. With the radius, a name,
+a category or a watch that comes before the storm enters the radius is not reported later: only
+**storm within the radius** fires on entry.
 
 - **NHC: new named storm**: a system becomes a tropical (or subtropical) storm or a hurricane and gets a
   name.

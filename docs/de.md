@@ -16,7 +16,8 @@ deines nationalen Wetterdienstes. Nicht mit der NOAA oder dem National Weather S
 - Ein **Gerät pro verfolgtem Becken**: Anzahl aktiver Systeme, stärkstes System (ausgeschrieben), seine
   Kategorie und sein Dauerwind, und die höchste Entstehungschance in 48 Stunden und 7 Tagen.
 - Ein Gerät **Nächster Hurrikan**: der Sturm, der deinem Zuhause am nächsten ist, seine Kategorie, sein
-  Dauerwind, seine Entfernung, seine Richtung (von zu Hause gesehen) und seine Zugbahn, mit Verlauf.
+  Dauerwind, seine Entfernung, seine Richtung (von zu Hause gesehen) und seine Zugbahn, mit Verlauf von Kategorie, Wind und Entfernung. Ohne Sturm behält die Richtung
+  ihren letzten Wert.
 - Ein **Dashboard-Widget** mit den aktiven Stürmen, stärkster zuerst, jeweils mit Meldung und
   Prognosekegel, und der Entstehungsprognose jedes Beckens.
 - Vier **Szenenauslöser**: neuer benannter Sturm, Sturm im Radius um dein Zuhause, Kategorie erhöht
@@ -89,14 +90,16 @@ Die Geräte werden von der Integration selbst aktualisiert (nicht durch die Abfr
 (höchstens 8): Einstufung und Name, Wind und Entfernung und ein Abzeichen mit der Kategorie (rot für einen
 schweren Hurrikan, orange für einen Hurrikan). Tippe auf einen Sturm, um Position, Zugbahn, Luftdruck,
 die geltenden Küstenwarnungen und die Links zur öffentlichen Meldung und zum Prognosekegel zu sehen.
-Darunter eine Zeile pro Becken mit den Entstehungschancen in 48 Stunden und 7 Tagen (Einstellung
-**Entstehungsprognose anzeigen**, um sie auszublenden). Das Widget folgt den Einheiten des Nutzers, der
+Darunter eine Zeile pro Becken mit den Entstehungschancen in 48 Stunden und 7 Tagen (Einstellung **Entstehungsprognose anzeigen**, um sie auszublenden) und ein Link zum NHC (Einstellung
+**Link zum NHC anzeigen**). Das Widget folgt den Einheiten des Nutzers, der
 es ansieht.
 
 ## Szenenauslöser
 
 Alle lassen sich nach **Becken** filtern. „Auslöser für“ wählt, ob die Auslöser neuer Sturm, Kategorie und
-Küstenwarnung für alle Stürme der verfolgten Becken gelten oder nur für die im Radius.
+Küstenwarnung für alle Stürme der verfolgten Becken gelten oder nur für die im Radius. Mit dem Radius werden ein
+Name, eine Kategorie oder eine Warnung, die vor dem Eintritt des Sturms in den Radius kommen, später
+nicht gemeldet: Beim Eintritt löst nur **Sturm im Radius** aus.
 
 - **NHC: neuer benannter Sturm**: ein System wird zum tropischen (oder subtropischen) Sturm oder zum
   Hurrikan und bekommt einen Namen.

@@ -17,7 +17,8 @@ Service.
 - Un **dispositivo por cuenca** seguida: número de sistemas activos, sistema más fuerte (en palabras),
   su categoría y su viento sostenido, y la mayor probabilidad de formación en 48 horas y en 7 días.
 - Un dispositivo **Huracán más cercano**: la tormenta más cercana a su casa, su categoría, su viento
-  sostenido, su distancia, su dirección (vista desde su casa) y su desplazamiento, con su historial.
+  sostenido, su distancia, su dirección (vista desde su casa) y su desplazamiento, con el historial de la categoría, el viento y la distancia. Sin tormenta, la
+  dirección conserva su último valor.
 - Un **widget** del panel con las tormentas activas, la más fuerte primero, cada una con su boletín y su
   cono de pronóstico, y la previsión de formación de cada cuenca.
 - Cuatro **desencadenantes de escena**: nueva tormenta con nombre, tormenta dentro del radio alrededor de
@@ -91,13 +92,16 @@ fuerte primero (8 como máximo): clasificación y nombre, viento y distancia, y 
 categoría (roja para un huracán mayor, naranja para un huracán). Toque una tormenta para ver su posición,
 su desplazamiento, su presión, las vigilancias y avisos costeros vigentes y los enlaces al aviso público y
 al cono de pronóstico. Debajo, una fila por cuenca con las probabilidades de formación en 48 horas y en
-7 días (ajuste **Mostrar la previsión de formación** para ocultarla). El widget sigue las unidades del
+7 días (ajuste **Mostrar la previsión de formación** para ocultarla), y un enlace al NHC (ajuste
+**Mostrar el enlace al NHC**). El widget sigue las unidades del
 usuario que lo mira.
 
 ## Desencadenantes de escena
 
 Todos se filtran por **cuenca**. «Desencadenantes para» elige si los desencadenantes de nueva tormenta,
-categoría y vigilancia se refieren a todas las tormentas de las cuencas seguidas o solo a las del radio.
+categoría y vigilancia se refieren a todas las tormentas de las cuencas seguidas o solo a las del radio. Con el radio, un nombre, una
+categoría o una vigilancia anteriores a la entrada de la tormenta en el radio no se señalan después:
+al entrar solo se dispara **tormenta dentro del radio**.
 
 - **NHC: nueva tormenta con nombre**: un sistema se convierte en tormenta tropical (o subtropical) o en
   huracán y recibe un nombre.

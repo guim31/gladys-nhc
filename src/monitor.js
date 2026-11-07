@@ -386,7 +386,9 @@ export class Monitor {
               : 'stronger';
         fired.push({ key: TRIGGERS.CATEGORY, storm, previous, milestone });
       }
-      if (inScope && kinds) {
+      // Kinds unknown before (feed down when the storm was first seen): a
+      // baseline, not news. A storm never seen before brings its watches as news.
+      if (inScope && kinds && (!before || Array.isArray(before.kinds))) {
         for (const kind of kinds.filter((k) => !(before?.kinds ?? []).includes(k))) {
           fired.push({ key: TRIGGERS.WATCH, storm, kind });
         }
@@ -396,7 +398,8 @@ export class Monitor {
         inside,
         category: storm.category,
         // An advisory not read this time keeps the kinds already known.
-        kinds: kinds ?? before?.kinds ?? [],
+        // Unknown at seeding (feed down): null, a baseline when it comes back.
+        kinds: kinds ?? before?.kinds ?? (seed ? null : []),
         seenAt: now,
       };
     }
@@ -512,10 +515,12 @@ export class Monitor {
           text(ids.movement, movement);
         }
       } else {
+        // The direction keeps its last value: no angle means "no storm".
         text(ids.storm, PHRASES[language].none);
         state(ids.category, 0);
         state(ids.wind, 0);
         state(ids.distance, UNIT_OF[units].noStorm);
+        text(ids.movement, PHRASES[language].none);
       }
     }
     return states;

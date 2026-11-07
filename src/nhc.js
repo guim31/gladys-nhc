@@ -202,10 +202,15 @@ export function parseFeed(xml) {
   const advisories = {};
   for (const item of items) {
     if (/Tropical Weather Outlook$/i.test(item.title)) {
-      outlook = { issuedAt: item.published, ...parseOutlook(item.text) };
+      // A special outlook may sit next to the regular one: the newest wins.
+      if (!outlook || (item.published ?? 0) > (outlook.issuedAt ?? 0)) {
+        outlook = { issuedAt: item.published, ...parseOutlook(item.text) };
+      }
       continue;
     }
-    if (!/(Public|Intermediate) Advisory Number/i.test(item.title)) {
+    // "Public Advisory", "Intermediate Advisory", and the plain "Advisory" of a
+    // Potential Tropical Cyclone; never the "Forecast Advisory" (no watch section).
+    if (!/Advisory Number/i.test(item.title) || /Forecast Advisory/i.test(item.title)) {
       continue;
     }
     const id = /\b(AL|EP|CP)(\d{2})(\d{4})\b/.exec(item.text);

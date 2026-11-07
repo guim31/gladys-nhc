@@ -70,6 +70,8 @@ test('the widget follows the units of the user, and hides the outlook if asked',
   assert.match(metric.components[1].items[0].subtitle, /^85 km\/h · 9\d\d km SSE of home$/);
   const hidden = await widget(w, { language: 'en', settings: { show_outlook: false } });
   assert.ok(!hidden.components.some((c) => c.type === 'status'));
+  const noLink = await widget(w, { language: 'en', settings: { show_link: false } });
+  assert.ok(!noLink.components.some((c) => c.type === 'button'));
 });
 
 test('the widget without storm, and before the NHC ever answered', async (t) => {
