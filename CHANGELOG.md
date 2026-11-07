@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-07
+
 ### Added
 
 - The tropical storms and hurricanes of the US National Hurricane Center: Atlantic, Eastern
@@ -25,4 +27,5 @@ the notes of the version's GitHub Release.
 - Dashboard widget: active storms with their advisory and forecast cone, formation outlook.
 - Imperial or metric units; texts in English, French, German and Spanish.
 
-[Unreleased]: https://github.com/guim31/gladys-nhc/commits/main
+[Unreleased]: https://github.com/guim31/gladys-nhc/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-nhc/releases/tag/v1.0.0
