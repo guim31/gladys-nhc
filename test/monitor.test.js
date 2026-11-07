@@ -329,6 +329,8 @@ test('a feed down when the storm is first seen: its watches are a baseline, not 
   });
   api.feedDown = 503;
   const w = await world(t, { api, config: KINGSTON });
+  await cycle(w);
+  assert.equal(w.monitor.data.known[MELISSA].kinds, null);
   api.feedDown = false;
   api.addAdvisory('at', MELISSA_ADVISORY, { published: START });
   await cycle(w);

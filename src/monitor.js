@@ -398,8 +398,9 @@ export class Monitor {
         inside,
         category: storm.category,
         // An advisory not read this time keeps the kinds already known.
-        // Unknown at seeding (feed down): null, a baseline when it comes back.
-        kinds: kinds ?? before?.kinds ?? (seed ? null : []),
+        // Unknown at seeding (feed down): null until an advisory is read, then a
+        // baseline.
+        kinds: kinds ?? (before ? before.kinds : seed ? null : []),
         seenAt: now,
       };
     }
